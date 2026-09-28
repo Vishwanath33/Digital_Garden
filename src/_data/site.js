@@ -1,6 +1,20 @@
 // ---------------------------------------------------------------------------
 // The one file to edit when you rename the library or move it to a new domain.
 // ---------------------------------------------------------------------------
+// GitHub Actions says which repository it is building as OWNER/NAME.
+const REPOSITORY = process.env.GITHUB_REPOSITORY || "";
+
+function pagesUrl() {
+  const [owner, name] = REPOSITORY.split("/");
+  if (!owner || !name) return null;
+  const user = `${owner.toLowerCase()}.github.io`;
+  return name.toLowerCase() === user ? `https://${user}` : `https://${user}/${name}`;
+}
+
+function repoUrl() {
+  return REPOSITORY ? `https://github.com/${REPOSITORY}` : null;
+}
+
 export default {
   title: "The Lorenz Library",
   tagline: "A small library, sensitive to initial conditions.",
@@ -15,12 +29,13 @@ export default {
   // Leave it null to serve from the free host address below.
   domain: null,
 
-  // The free address GitHub Pages serves this repository from. A project
-  // page lives under /<repo>/; the path prefix is derived from this.
-  hostUrl: "https://vishwanath33.github.io/Digital_Garden",
-
-  // Repository, for "history & source" links.
-  repo: "https://github.com/Vishwanath33/Digital_Garden",
+  // The free address GitHub Pages serves this repository from, and the
+  // repository itself. When GitHub Actions builds the site these follow the
+  // repository's real name, so renaming it needs no edit here: a repository
+  // named <user>.github.io is served from the root of that address, any
+  // other from /<repo>/ beneath it. The values below are for local builds.
+  hostUrl: pagesUrl() || "https://vishwanath33.github.io/Digital_Garden",
+  repo: repoUrl() || "https://github.com/Vishwanath33/Digital_Garden",
   // HEAD resolves to whatever the default branch is called.
   repoBranch: "HEAD",
 

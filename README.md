@@ -155,6 +155,21 @@ Actions.** That setting can't be made from the workflow, because its token
 isn't allowed to enable Pages. Until it's set, runs fail at `configure-pages`.
 After setting it, re-run the latest workflow run or push again.
 
+### A shorter address, free
+
+Rename the repository to `vishwanath33.github.io` (**Settings → General →
+Repository name**) and the site moves to `https://vishwanath33.github.io/`,
+served from the root. Nothing in the code needs changing: when GitHub
+Actions builds the site, `src/_data/site.js` reads the repository's name and
+sets the address and path prefix to match. After renaming, push anything or
+run the workflow by hand to rebuild.
+
+A real domain of your own, free, is available from
+[eu.org](https://nic.eu.org/) (e.g. `yourname.eu.org`): registration is
+manual and approval can take weeks. Once it is yours, follow the steps
+below. (The popular `is-a.dev` subdomains are not an option for this site:
+their terms exclude blogs not primarily about software development.)
+
 ### A custom domain
 
 Buy the name from any registrar. [Cloudflare Registrar](https://www.cloudflare.com/products/registrar/)
