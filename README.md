@@ -155,11 +155,6 @@ Actions.** That setting can't be made from the workflow, because its token
 isn't allowed to enable Pages. Until it's set, runs fail at `configure-pages`.
 After setting it, re-run the latest workflow run or push again.
 
-> The repository was created empty, so the first push became the default
-> branch rather than `main`. The workflow watches both; rename the branch to
-> `main` in **Settings → Branches** and then drop the extra entry from the
-> workflow's `branches:` list.
-
 ### A custom domain
 
 Buy the name from any registrar. [Cloudflare Registrar](https://www.cloudflare.com/products/registrar/)
