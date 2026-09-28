@@ -146,23 +146,22 @@ and `RATE` (the slow rocking of the view).
 ## Deploying
 
 A push triggers `.github/workflows/deploy.yml`, which builds the site and
-publishes it to GitHub Pages at
-`https://vishwanath33.github.io/vishwanath`. GitHub Pages is free for
-public repositories.
+publishes it to GitHub Pages at `https://vishwanath33.github.io/`. GitHub
+Pages is free for public repositories.
 
 One-time setup: **Settings → Pages → Build and deployment → Source: GitHub
 Actions.** That setting can't be made from the workflow, because its token
 isn't allowed to enable Pages. Until it's set, runs fail at `configure-pages`.
 After setting it, re-run the latest workflow run or push again.
 
-### A shorter address, free
+### The address follows the repository's name
 
-Rename the repository to `vishwanath33.github.io` (**Settings → General →
-Repository name**) and the site moves to `https://vishwanath33.github.io/`,
-served from the root. Nothing in the code needs changing: when GitHub
-Actions builds the site, `src/_data/site.js` reads the repository's name and
-sets the address and path prefix to match. After renaming, push anything or
-run the workflow by hand to rebuild.
+The repository is named `vishwanath33.github.io`, which is what makes GitHub
+serve it from the root of that address; any other name would put the site
+under `/<name>/`. When GitHub Actions builds the site, `src/_data/site.js`
+reads the repository's name and sets the address and path prefix to match,
+so a rename needs no code change, only a rebuild (push anything, or run the
+workflow by hand). Until that rebuild, a renamed site's links are broken.
 
 A real domain of your own, free, is available from
 [eu.org](https://nic.eu.org/) (e.g. `yourname.eu.org`): registration is
@@ -182,9 +181,9 @@ good. Then:
    domain: "your-domain.example",
    ```
 
-   The build writes `_site/CNAME` from that value, and drops the
-   `/vishwanath/` path prefix. Canonical URLs, the sitemap and the feed
-   all follow the same setting.
+   The build writes `_site/CNAME` from that value, which is how GitHub
+   Pages learns about it. Canonical URLs, the sitemap and the feed all
+   follow the same setting.
 
 2. At your registrar, point the domain at GitHub Pages. For an **apex**
    domain (`your-domain.example`):
