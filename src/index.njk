@@ -5,7 +5,9 @@ permalink: /index.html
 ---
 <section class="title-page">
   <p class="kicker">A personal library · established 2026</p>
-  <h1 class="display">The Lorenz <em>Library</em></h1>
+  {# The visible heading is gone by request; the page keeps its title for
+     screen readers and search engines. #}
+  <h1 class="sr-only">{{ site.title }}</h1>
   <p class="display-sub">{{ site.tagline }}</p>
 </section>
 

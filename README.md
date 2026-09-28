@@ -81,6 +81,15 @@ The claim in the main text.[^why]
 [^why]: The qualification that would have interrupted it.
 ```
 
+### Plate I
+
+`{% plate %}` on a line of its own places the Lorenz attractor as a running
+experiment: three trajectories begun 10⁻⁵ apart, with a caption, a live
+readout of their separation and a log-scale sparkline, and Pause and Re-run
+controls. It spans the full text block, is dark in both themes, and rests
+when scrolled out of view. `src/notes/plate-i.md` is the entry that shows it;
+its script (`src/assets/js/plate.js`) is loaded only on pages that use it.
+
 ### Asides and epigraphs
 
 ```markdown
@@ -239,6 +248,7 @@ src/
   _includes/layouts/       ← base (sheet over background), note, page
   assets/css/library.css   ← the whole visual system
   assets/js/lorenz.js      ← the background
+  assets/js/plate.js       ← Plate I, the attractor as an instrument
   assets/js/graph.js       ← the neighbourhood figures and the map
   assets/js/library.js     ← search, sidenotes, theme, catalogue filter
   notes/*.md               ← the library

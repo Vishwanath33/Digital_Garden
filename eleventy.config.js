@@ -319,6 +319,34 @@ export default function (eleventyConfig) {
     `<blockquote class="epigraph">${md.render(content.trim())}${source ? `<cite>${source}</cite>` : ""}</blockquote>`,
   );
 
+  /**
+   * Plate I: the Lorenz attractor as a running experiment, with its caption
+   * and live readout. `{% plate %}` in an entry places it; plate.js runs it.
+   */
+  eleventyConfig.addShortcode("plate", () => `<figure class="plate" data-plate aria-labelledby="plate-caption">
+  <div class="plate__bar" data-plate-bar>
+    <span class="plate__label">Plate I</span>
+    <span class="plate__controls">
+      <button type="button" data-plate-toggle aria-pressed="false">Pause</button>
+      <button type="button" data-plate-rerun>Re-run</button>
+    </span>
+  </div>
+  <canvas data-plate-canvas aria-hidden="true"></canvas>
+  <figcaption class="plate__caption" data-plate-caption id="plate-caption">
+    <p class="plate__title">
+      <em>The Lorenz attractor.</em> σ&#8202;=&#8202;10, ρ&#8202;=&#8202;28, β&#8202;=&#8202;8/3.
+      Three trajectories from one point: <span class="traj traj--b">b</span> and
+      <span class="traj traj--c">c</span> begin 10⁻⁵ from <span class="traj traj--a">a</span>,
+      and are strangers within a minute.
+    </p>
+    <dl class="readout">
+      <div><dt>t</dt><dd data-readout="t">0.00</dd></div>
+      <div><dt>a</dt><dd><span data-readout="x"></span> <span data-readout="y"></span> <span data-readout="z"></span></dd></div>
+      <div><dt>|a−b|</dt><dd><span data-readout="delta"></span><canvas class="spark" data-spark aria-hidden="true"></canvas></dd></div>
+    </dl>
+  </figcaption>
+</figure>`);
+
   // --- feed ---------------------------------------------------------------
   eleventyConfig.addPlugin(feedPlugin, {
     type: "atom",

@@ -59,6 +59,12 @@ choice; under `prefers-reduced-motion` it never moves at all; it rests while
 the tab is hidden; and if it ever starts costing frames it gives up
 resolution, then the length of its trails, then its motion.
 
+The same system appears once more in the foreground, as
+[Plate I](/notes/plate-i/): a running experiment with a caption, a live
+readout of how far three trajectories have drifted apart, and a sparkline of
+that distance on a logarithmic scale, where exponential growth draws a
+straight line.
+
 ## The apparatus
 
 - **Accession numbers** are given in the order entries were written, as a

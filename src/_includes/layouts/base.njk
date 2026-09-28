@@ -87,6 +87,7 @@
 
 <script src="/assets/js/lorenz.js" defer></script>
 <script src="/assets/js/library.js" defer></script>
+{% if 'data-plate' in content %}<script src="/assets/js/plate.js" defer></script>{% endif %}
 {% if isNote or usesGraph %}<script src="/assets/js/graph.js" defer></script>{% endif %}
 </body>
 </html>

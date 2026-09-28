@@ -77,6 +77,15 @@
   --rule: #d3ccbe;
   --accent: #b3361b;             /* a librarian's stamp */
 
+  /* Plate I: always dark, with its own light-coloured trajectories. */
+  --plate: #0b0e13;
+  --plate-ink: #ded7ca;
+  --plate-dim: #7c838d;
+  --plate-rule: #232933;
+  --plate-traj-a: 244, 235, 216;
+  --plate-traj-b: 255, 104, 58;
+  --plate-traj-c: 58, 200, 186;
+
   /* The sheet, and the table it lies on. */
   --table: #e6e0d4;
   --sheet: rgba(245, 242, 235, 0.8);
@@ -309,6 +318,105 @@ kbd {
 .running-head__title:hover { color: var(--accent); }
 .running-head__nav a[aria-current="page"] { color: var(--ink); }
 .running-head__button kbd { font-size: 0.95em; margin-left: 0.2em; text-transform: none; }
+
+/* --- Plate I: the attractor as an instrument, set in an entry --------------
+   Dark in both themes, like a photographic plate bound into a book. It
+   spans the whole text block, margin included. */
+.prose > .plate,
+.plate {
+  position: relative;
+  width: 100cqi;
+  max-width: none;
+  height: clamp(30rem, 82vh, 46rem);
+  margin: 2.25rem 0;
+  border: 1px solid var(--plate-rule);
+  border-radius: 3px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 42%, color-mix(in srgb, var(--plate) 88%, #1d2a3a) 0%, var(--plate) 70%);
+  color: var(--plate-ink);
+}
+.plate canvas[data-plate-canvas] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.plate__bar {
+  position: absolute;
+  z-index: 1;
+  inset: 0 0 auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.9rem 2rem 1rem;
+  font: 0.7rem var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--plate-dim);
+}
+.plate__controls { display: flex; gap: 0.5rem; }
+.plate__controls button {
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: var(--plate-ink);
+  background: transparent;
+  border: 1px solid var(--plate-rule);
+  border-radius: 2px;
+  padding: 0.4rem 0.7rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.plate__controls button:hover { border-color: var(--plate-ink); }
+.plate__controls button:focus-visible { outline-color: rgb(var(--plate-traj-b)); }
+
+.plate__caption {
+  position: absolute;
+  z-index: 1;
+  inset: auto 0 0 0;
+  padding: 1.25rem 2rem 1.9rem;
+  background: linear-gradient(to top, var(--plate) 72%, transparent);
+}
+.plate__title {
+  margin: 0 0 1rem;
+  max-width: 30rem;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--plate-ink);
+}
+.plate__title em { font-style: italic; }
+
+.traj {
+  display: inline-block;
+  min-width: 1.2em;
+  padding: 0 0.28em;
+  border-radius: 2px;
+  font: 500 0.78em/1.35 var(--mono);
+  text-align: center;
+  color: #0b0e13;
+  font-style: normal;
+}
+.traj--a { background: rgb(var(--plate-traj-a)); }
+.traj--b { background: rgb(var(--plate-traj-b)); }
+.traj--c { background: rgb(var(--plate-traj-c)); }
+
+.readout {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.28rem 1.1rem;
+  margin: 0;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--plate-rule);
+  font: 0.74rem/1.5 var(--mono);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.readout div { display: contents; }
+.readout dt { color: var(--plate-dim); }
+.readout dd { margin: 0; color: var(--plate-ink); white-space: nowrap; display: flex; align-items: center; gap: 0.75rem; }
+.spark { width: 8.5rem; height: 1.15rem; flex: none; }
 
 /* --- entry heads ------------------------------------------------------------- */
 .kicker {
@@ -901,6 +1009,10 @@ code, pre, samp { font-family: var(--mono); font-size: 0.8em; font-variant-numer
 
 @media (max-width: 34rem) {
   body { font-size: 1.1875rem; }
+  .plate { height: clamp(30rem, 78svh, 38rem); }
+  .plate__title { font-size: 0.9rem; }
+  .plate__bar { padding: 1.1rem 1.1rem 0.8rem; }
+  .plate__caption { padding: 1rem 1.1rem 1.2rem; }
   .running-head__nav { gap: 0.35rem 1rem; }
   .card { padding-left: 1.4rem; padding-top: 1.5rem; transform: none; }
   .card__call { position: static; margin-bottom: 0; }

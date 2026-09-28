@@ -26,12 +26,14 @@ const TYPES = {
  * entries can be exercised without publishing any.
  */
 const temps = [];
-function build({ withFixtures }) {
+function build({ entries, fixtures }) {
   const dir = mkdtempSync(join(tmpdir(), "library-"));
   temps.push(dir);
   for (const f of ["eleventy.config.js", "package.json", "src"]) cpSync(join(REPO, f), join(dir, f), { recursive: true });
   symlinkSync(join(REPO, "node_modules"), join(dir, "node_modules"));
-  if (withFixtures) for (const f of readdirSync(FIXTURES)) cpSync(join(FIXTURES, f), join(dir, "src/notes", f));
+  const notes = join(dir, "src/notes");
+  if (!entries) for (const f of readdirSync(notes)) if (f.endsWith(".md")) rmSync(join(notes, f));
+  if (fixtures) for (const f of readdirSync(FIXTURES)) cpSync(join(FIXTURES, f), join(notes, f));
   execFileSync(process.execPath, [ELEVENTY, "--quiet"], { cwd: dir, stdio: "pipe" });
   return join(dir, "_site");
 }
@@ -55,11 +57,13 @@ function serve(root, port) {
 }
 
 const servers = [
-  await serve(build({ withFixtures: true }), 8099),
-  await serve(build({ withFixtures: false }), 8098),
+  await serve(build({ entries: false, fixtures: true }), 8099),
+  await serve(build({ entries: true, fixtures: false }), 8098),
+  await serve(build({ entries: false, fixtures: false }), 8097),
 ];
-const BASE = `http://127.0.0.1:8099${PREFIX}`;        // with sample entries
-const EMPTY = `http://127.0.0.1:8098${PREFIX}`;       // as published
+const BASE = `http://127.0.0.1:8099${PREFIX}`;        // the sample entries only
+const SITE = `http://127.0.0.1:8098${PREFIX}`;        // exactly as published
+const EMPTY = `http://127.0.0.1:8097${PREFIX}`;       // no entries at all
 
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome",
@@ -282,7 +286,7 @@ const canvasPainted = (p, sel) =>
   await ctx.close();
 }
 
-// --- the site as published: no entries yet -------------------------------------
+// --- an empty library -------------------------------------
 {
   const { ctx, p, problems } = await page();
   for (const path of ["", "notes/", "tags/", "map/", "about/", "colophon/", "404.html"]) {
@@ -309,6 +313,57 @@ const canvasPainted = (p, sel) =>
   const feed = await (await p.request.get(`${EMPTY}feed.xml`)).text();
   check(feed.includes("<feed") && !feed.includes("<entry>"), "empty site: feed is valid and has no entries");
   await ctx.close();
+}
+
+// --- the site as published: the home page and Plate I ---------------------------
+{
+  const { ctx, p, problems } = await page();
+  await p.goto(SITE, { waitUntil: "networkidle" });
+  check(
+    (await p.locator(".display").count()) === 0 &&
+      (await p.evaluate(() => {
+        const h = document.querySelector("h1");
+        return h.classList.contains("sr-only") && h.getBoundingClientRect().height <= 1;
+      })),
+    "home: the big heading is gone",
+  );
+  check((await p.locator(".display-sub").innerText()).includes("sensitive to initial conditions"), "home: the subheading stays");
+  check(await p.locator("h1").count() === 1, "home: still one (hidden) page title for screen readers");
+  check(await p.locator('script[src$="plate.js"]').count() === 0, "home: the plate's script is not loaded where there is no plate");
+
+  await p.goto(`${SITE}notes/plate-i/`, { waitUntil: "networkidle" });
+  await p.locator("[data-plate]").scrollIntoViewIfNeeded();
+  await p.waitForTimeout(800);
+  check(problems.length === 0, `Plate I: every request resolves, no script errors${problems.length ? " — " + problems.join(", ") : ""}`);
+  check(await p.evaluate(() => window.__plate.running) && (await canvasPainted(p, "[data-plate-canvas]")), "Plate I: running and drawn");
+  check(await p.evaluate(() => window.__lorenz.running), "Plate I: the background keeps running beside it");
+  const early = await p.evaluate(() => ({ t: window.__plate.t, d: window.__plate.separation }));
+  await p.waitForTimeout(7000);
+  const later = await p.evaluate(() => ({ t: window.__plate.t, d: window.__plate.separation }));
+  check(later.t > early.t + 3, `Plate I: time advances (t ${early.t.toFixed(1)} → ${later.t.toFixed(1)})`);
+  // Growth is exponential on average but not smooth (it bursts near the
+  // crossing), so compare with the initial disagreement of 1e-5.
+  check(later.d > 1e-5 * 100, `Plate I: trajectories diverge from 1e-5 apart (|a−b| now ${later.d.toExponential(1)})`);
+  check((await p.locator('[data-readout="t"]').innerText()).trim() !== "0.00" && (await p.locator('[data-readout="delta"]').innerText()).length > 0, "Plate I: readout updates");
+  check(await p.evaluate(() => window.__plate.sparkSamples) > 10 && (await canvasPainted(p, "[data-spark]")), "Plate I: separation sparkline drawn");
+  await p.click("[data-plate-toggle]");
+  check(await p.evaluate(() => !window.__plate.running) && (await p.locator("[data-plate-toggle]").innerText()).toLowerCase() === "play", "Plate I: Pause stops it");
+  await p.click("[data-plate-toggle]");
+  check(await p.evaluate(() => window.__plate.running), "Plate I: Play resumes it");
+  await p.click("[data-plate-rerun]");
+  check(await p.evaluate(() => window.__plate.t < 1 && window.__plate.separation < 1e-3), "Plate I: Re-run starts a fresh experiment");
+  const box = await p.locator("[data-plate]").boundingBox();
+  const text = await p.locator(".text").boundingBox();
+  check(Math.abs(box.width - text.width) < 2, "Plate I: spans the full text block");
+  await ctx.close();
+
+  const phone = await page({ viewport: { width: 390, height: 844 } });
+  await phone.p.goto(`${SITE}notes/plate-i/`, { waitUntil: "networkidle" });
+  check(await phone.p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "Plate I: no horizontal scroll on a phone");
+  await phone.p.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: "instant" }));
+  await phone.p.waitForTimeout(500);
+  check(await phone.p.evaluate(() => !window.__plate.running), "Plate I: rests when scrolled out of view");
+  await phone.ctx.close();
 }
 
 await browser.close();
