@@ -1,12 +1,12 @@
 /* ==========================================================================
    The Lorenz Library
 
-   Two fields, after the asymmetric layouts of the Swiss grid: a light page
-   for reading, and a dark plate where the attractor runs. Body text was
-   decided first (Butterick): Newsreader at 20px, about 66 characters to the
-   line (Bringhurst's ideal), leading at 145%. The page's wide outer margin,
-   between text and plate, carries the sidenotes, as Tschichold's canon puts
-   the wider margin on the outside and Tufte puts the notes there.
+   A sheet of paper laid over a moving background. The Lorenz attractor
+   fills the screen behind; the text sits on a sheet opaque enough that the
+   background can never upstage it (Butterick), while its lobes open out
+   either side. Body text was decided first: Newsreader at 20px, about 66
+   characters to the line (Bringhurst's ideal), leading at 145%. The sheet's
+   outer margin carries the sidenotes, as Tufte puts them.
 
    Two voices, never mixed: the serif is the text; the monospace is the
    apparatus — labels, numbers, navigation, captions' data.
@@ -59,8 +59,14 @@
   --measure: 35rem;            /* ≈ 66 characters of Newsreader at 20px */
   --note: 12rem;               /* the outer margin's note column */
   --gutter: 2.25rem;
-  --inner: clamp(1.25rem, 4.5vw, 5.5rem);
-  --plate-w: clamp(22rem, 36vw, 46rem);
+  --block: calc(var(--measure) + var(--gutter) + var(--note));
+  --sheet-pad: clamp(1.25rem, 4vw, 3.5rem);
+
+  /* The background figure: vertical focus (fraction of the screen), and
+     how much of the width and height it may take. */
+  --bg-focus-y: 0.5;
+  --bg-width: 0.98;
+  --bg-height: 1.15;
 
   /* Paper and ink. */
   --paper: #f3f0e8;
@@ -71,14 +77,20 @@
   --rule: #d3ccbe;
   --accent: #b3361b;             /* a librarian's stamp */
 
-  /* The plate is dark in both themes: it is a photograph, not a page. */
-  --plate: #0b0e13;
-  --plate-ink: #ded7ca;
-  --plate-dim: #7c838d;
-  --plate-rule: #232933;
-  --traj-a: 244, 235, 216;
-  --traj-b: 255, 104, 58;
-  --traj-c: 58, 200, 186;
+  /* The sheet, and the table it lies on. */
+  --table: #e6e0d4;
+  --sheet: rgba(245, 242, 235, 0.88);
+  --sheet-edge: rgba(90, 75, 60, 0.14);
+  --sheet-shadow: 0 30px 80px -40px rgba(60, 45, 30, 0.35);
+
+  /* The background, in ink: three trajectories over a faint atlas. */
+  --traj-a: 58, 50, 44;
+  --traj-b: 179, 54, 27;
+  --traj-c: 32, 122, 114;
+  --atlas: 58, 50, 44;
+  --atlas-alpha: 0.11;
+  --trail-alpha: 0.6;
+  --trail-blend: source-over;
 
   /* The catalogue card. */
   --card: #fbf9f3;
@@ -97,8 +109,17 @@
     --ink-3: #7d7a73;
     --rule: #2c2d31;
     --accent: #ff7b50;
-    --plate: #06080b;
-    --plate-rule: #1c2027;
+    --table: #0a0c10;
+    --sheet: rgba(18, 19, 22, 0.86);
+    --sheet-edge: rgba(255, 255, 255, 0.07);
+    --sheet-shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.9);
+    --traj-a: 244, 235, 216;
+    --traj-b: 255, 104, 58;
+    --traj-c: 58, 200, 186;
+    --atlas: 244, 235, 216;
+    --atlas-alpha: 0.12;
+    --trail-alpha: 0.85;
+    --trail-blend: lighter;
     --card: #18191c;
     --card-line: rgba(130, 165, 215, 0.1);
     --card-red: rgba(255, 115, 80, 0.4);
@@ -114,8 +135,17 @@
   --ink-3: #7d7a73;
   --rule: #2c2d31;
   --accent: #ff7b50;
-  --plate: #06080b;
-  --plate-rule: #1c2027;
+  --table: #0a0c10;
+  --sheet: rgba(18, 19, 22, 0.86);
+  --sheet-edge: rgba(255, 255, 255, 0.07);
+  --sheet-shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.9);
+  --traj-a: 244, 235, 216;
+  --traj-b: 255, 104, 58;
+  --traj-c: 58, 200, 186;
+  --atlas: 244, 235, 216;
+  --atlas-alpha: 0.12;
+  --trail-alpha: 0.85;
+  --trail-blend: lighter;
   --card: #18191c;
   --card-line: rgba(130, 165, 215, 0.1);
   --card-red: rgba(255, 115, 80, 0.4);
@@ -132,7 +162,7 @@ html {
 
 body {
   margin: 0;
-  background: var(--paper);
+  background: var(--table);
   color: var(--ink);
   font-family: var(--serif);
   font-size: 1.25rem;              /* 20px: Butterick's 15–25px band */
@@ -200,29 +230,41 @@ kbd {
   font-variant-numeric: tabular-nums;
 }
 
-/* --- the folio: page and plate --------------------------------------------- */
+/* --- the background, and the sheet laid over it ---------------------------- */
+.background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
 .folio {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--plate-w);
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  padding: clamp(1rem, 4vh, 3rem) 1.25rem clamp(2rem, 8vh, 6rem);
   min-height: 100vh;
 }
 
 .page {
-  --block: calc(var(--measure) + var(--gutter) + var(--note));
-  min-width: 0;
-  /* Tschichold: the outer margin twice the inner. Of the width the text
-     block leaves free, a third goes inside and two thirds outside, toward
-     the plate. */
-  padding: 0 2rem 0 max(var(--inner), calc((100vw - var(--plate-w) - var(--block) - 2rem) / 3));
   display: flex;
   flex-direction: column;
+  width: min(100%, calc(var(--block) + 2 * var(--sheet-pad)));
+  padding: 0 var(--sheet-pad);
+  background: var(--sheet);
+  border: 1px solid var(--sheet-edge);
+  border-radius: 2px;
+  box-shadow: var(--sheet-shadow);
 }
 
 .text {
   container: text / inline-size;
   flex: 1;
   width: 100%;
-  max-width: calc(var(--measure) + var(--gutter) + var(--note));
   padding-bottom: 6rem;
 }
 
@@ -235,7 +277,6 @@ kbd {
   gap: 0.75rem 2rem;
   padding: 2.25rem 0 0;
   margin-bottom: clamp(3.5rem, 9vh, 6.5rem);
-  max-width: calc(var(--measure) + var(--gutter) + var(--note));
   font-size: 0.72rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -268,100 +309,6 @@ kbd {
 .running-head__title:hover { color: var(--accent); }
 .running-head__nav a[aria-current="page"] { color: var(--ink); }
 .running-head__button kbd { font-size: 0.95em; margin-left: 0.2em; text-transform: none; }
-
-/* --- the plate --------------------------------------------------------------- */
-.plate {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  height: 100dvh;
-  margin: 0;
-  overflow: hidden;
-  background:
-    radial-gradient(ellipse 80% 60% at 50% 42%, color-mix(in srgb, var(--plate) 88%, #1d2a3a) 0%, var(--plate) 70%);
-  color: var(--plate-ink);
-}
-.plate canvas[data-plate-canvas] {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.plate__bar {
-  position: absolute;
-  z-index: 1;
-  inset: 0 0 auto 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.9rem 2rem 1rem;
-  font: 0.7rem var(--mono);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--plate-dim);
-}
-.plate__controls { display: flex; gap: 0.5rem; }
-.plate__controls button {
-  font: inherit;
-  letter-spacing: inherit;
-  text-transform: inherit;
-  color: var(--plate-ink);
-  background: transparent;
-  border: 1px solid var(--plate-rule);
-  border-radius: 2px;
-  padding: 0.4rem 0.7rem;
-  cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
-}
-.plate__controls button:hover { border-color: var(--plate-ink); }
-.plate__controls button:focus-visible { outline-color: rgb(var(--traj-b)); }
-
-.plate__caption {
-  position: absolute;
-  z-index: 1;
-  inset: auto 0 0 0;
-  padding: 1.25rem 2rem 1.9rem;
-  background: linear-gradient(to top, var(--plate) 72%, transparent);
-}
-.plate__title {
-  margin: 0 0 1rem;
-  max-width: 30rem;
-  font-size: 1rem;
-  line-height: 1.45;
-  color: var(--plate-ink);
-}
-.plate__title em { font-style: italic; }
-
-.traj {
-  display: inline-block;
-  min-width: 1.2em;
-  padding: 0 0.28em;
-  border-radius: 2px;
-  font: 500 0.78em/1.35 var(--mono);
-  text-align: center;
-  color: #0b0e13;
-  font-style: normal;
-}
-.traj--a { background: rgb(var(--traj-a)); }
-.traj--b { background: rgb(var(--traj-b)); }
-.traj--c { background: rgb(var(--traj-c)); }
-
-.readout {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 0.28rem 1.1rem;
-  margin: 0;
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--plate-rule);
-  font: 0.74rem/1.5 var(--mono);
-  font-variant-numeric: tabular-nums lining-nums;
-}
-.readout div { display: contents; }
-.readout dt { color: var(--plate-dim); }
-.readout dd { margin: 0; color: var(--plate-ink); white-space: nowrap; display: flex; align-items: center; gap: 0.75rem; }
-.spark { width: 8.5rem; height: 1.15rem; flex: none; }
 
 /* --- entry heads ------------------------------------------------------------- */
 .kicker {
@@ -873,7 +820,6 @@ code, pre, samp { font-family: var(--mono); font-size: 0.8em; font-variant-numer
 .foot {
   padding: 1.25rem 0 2rem;
   border-top: 1px solid var(--rule);
-  max-width: calc(var(--measure) + var(--gutter) + var(--note));
   font-size: 0.7rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -943,27 +889,19 @@ code, pre, samp { font-family: var(--mono); font-size: 0.8em; font-variant-numer
 .search__empty { margin: 1rem 0 0.5rem; font-style: italic; color: var(--ink-3); }
 .search__hint { margin: 0.8rem 0 0; font: 0.64rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
 
-/* --- one column: running head, then the plate, then the text --------------- */
-@media (max-width: 67.99rem) {
-  .folio { grid-template-columns: minmax(0, 1fr); }
-  .page { display: contents; }
-  .running-head { order: 1; padding: 1.4rem 1.25rem 1.2rem; margin: 0; max-width: none; }
-  .plate {
-    order: 2;
-    position: relative;
-    height: min(78svh, 46rem);
-    min-height: 30rem;
-  }
-  .text { order: 3; padding: 3rem 1.25rem 5rem; max-width: 44rem; margin: 0 auto; }
-  .foot { order: 4; padding: 1.25rem; margin: 0 auto; width: 100%; max-width: 44rem; }
-  .plate__bar { padding: 1.1rem 1.25rem 0.8rem; }
-  .plate__caption { padding: 1rem 1.25rem 1.3rem; }
+/* --- narrow screens: the sheet fills the width; on the home page it sits
+   lower, so the background opens the site like a cover. ---------------- */
+@media (max-width: 48rem) {
+  :root { --bg-focus-y: 0.2; --bg-width: 1.12; --bg-height: 0.4; }
+  .folio { padding: 0.75rem 0.5rem 3rem; }
+  .folio--home { padding-top: 40svh; }
+  .running-head { padding-top: 1.4rem; margin-bottom: 3rem; }
+  .text { padding-bottom: 4rem; }
 }
 
 @media (max-width: 34rem) {
   body { font-size: 1.1875rem; }
   .running-head__nav { gap: 0.35rem 1rem; }
-  .plate__title { font-size: 0.95rem; }
   .card { padding-left: 1.4rem; padding-top: 1.5rem; transform: none; }
   .card__call { position: static; margin-bottom: 0; }
   .card__call br { display: none; }
@@ -972,7 +910,8 @@ code, pre, samp { font-family: var(--mono); font-size: 0.8em; font-variant-numer
 }
 
 @media print {
-  .plate, .running-head__nav, .overlay, .skip-link { display: none !important; }
-  .folio { display: block; }
+  .background, .running-head__nav, .overlay, .skip-link { display: none !important; }
+  .folio { display: block; padding: 0; }
+  .page { border: 0; box-shadow: none; background: none; width: auto; }
   body { background: #fff; color: #000; }
 }

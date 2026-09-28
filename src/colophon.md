@@ -6,21 +6,15 @@ summary: The design of this library, the books it draws on, and how it is built.
 permalink: /colophon/index.html
 ---
 
-## The two fields
+## The page and the background
 
-The page is divided into two fields, set side by side and unequal, after the
-asymmetric layouts of the Swiss grid: a light page for reading, and a dark
-plate for the attractor. Josef Müller-Brockmann's argument in *Grid Systems
-in Graphic Design* is that a layout gains authority when its structure is
-explicit; here the structure is the join between the two fields, and nothing
-straddles it.
-
-The plate is a separate field rather than a background because of a rule
-from Matthew Butterick's *Practical Typography*: divide the page into
-foreground and background, and never let the background upstage the
-foreground. An attractor faded behind the text can only be made more visible
-by making the text harder to read. Given its own field, it can be as bright
-as it likes.
+The Lorenz attractor runs behind every page, and the text sits on a sheet of
+paper laid over it. Matthew Butterick's rule in *Practical Typography* is to
+divide a page into foreground and background and never let the background
+upstage the foreground; the sheet is how that rule is kept here. It is
+opaque enough that the text reads as if on plain paper, and translucent
+enough that the lines show faintly through it, while the attractor's two
+lobes open out on either side, where nothing needs reading.
 
 ## The text
 
@@ -46,32 +40,25 @@ browser cannot close.
 
 ## Margins and notes
 
-Jan Tschichold's reconstruction of the medieval page canon gives margins in
-the ratio 2 : 3 : 4 : 6 (inner, top, outer, bottom), so the outer margin is
-twice the inner. Here the outer margin is the space between the text and the
-plate, and it carries the notes. Footnotes become sidenotes there, beside the
-line that cites them, as in Edward Tufte's books. When the page is too narrow
-for a margin, they fold out inline when their number is tapped.
+The sheet keeps a wide margin to the right of the text, and footnotes become
+sidenotes there, beside the line that cites them, as in Edward Tufte's
+books. When the sheet is too narrow for a margin, they fold out inline when
+their number is tapped.
 
-## The plate
+## The background
 
 A live integration of the Lorenz system at σ = 10, ρ = 28, β = 8/3, stepped
-with fourth-order Runge–Kutta. Three trajectories start 10⁻⁵ apart and are
-drawn with additive light, so they read as one white line while they agree
-and split into three colours as they diverge. A faint atlas behind them, a
-single long trajectory, shows the whole attractor from the first frame.
+with fourth-order Runge–Kutta, so the figure is the real attractor rather
+than a drawing of one. A faint atlas, a single long trajectory, shows its
+whole shape; three live trajectories that begin 10⁻⁵ apart trace over it and
+drift into three paths within seconds. In the light theme it is drawn in
+ink, in the dark theme in light.
 
-The caption reports time, position and the separation between two of the
-trajectories, with a sparkline of that separation on a logarithmic scale.
-The sparkline is Tufte's, a word-sized graphic set inline with the text it
-belongs to; on a log scale exponential growth is a straight line, so its
-slope is the system's Lyapunov exponent.
-
-The plate respects `prefers-reduced-motion` (it runs the experiment out of
-sight and shows the result), and rests when scrolled away or when the tab is
-hidden. If it ever starts costing frames, it gives up what a reader will
-least notice first: resolution, then the length of its trails, and finally
-its motion. [Why it hangs here](/notes/lorenz-attractor/) is an entry of its own.
+It keeps out of the way. *Still*, in the header, stops it and remembers the
+choice; under `prefers-reduced-motion` it never moves at all; it rests while
+the tab is hidden; and if it ever starts costing frames it gives up
+resolution, then the length of its trails, then its motion.
+[The entry on the attractor](/notes/lorenz-attractor/) says why it is there.
 
 ## The apparatus
 

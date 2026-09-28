@@ -2,10 +2,12 @@
 
 A personal library of linked notes: entries shelved by subject,
 cross-referenced, and corrected in place, each labelled with how finished it
-is and how much its author currently believes it. The page shares the screen
-with a plate on which the Lorenz attractor runs live, as an experiment with
-a caption that measures it. Built with [Eleventy](https://www.11ty.dev/) and
-deployed to GitHub Pages.
+is and how much its author currently believes it. The Lorenz attractor runs
+live in the background, behind a sheet of paper that carries the text. Built
+with [Eleventy](https://www.11ty.dev/) and deployed to GitHub Pages.
+
+An earlier design, with the attractor as a captioned plate beside the text,
+is kept on the `design/plate` branch.
 
 ```
 npm install
@@ -106,13 +108,12 @@ source is public, and the stage vocabulary.
 
 Colours, type and the grid are CSS custom properties at the top of
 `src/assets/css/library.css`: `--measure` (the text column), `--note` (the
-margin notes), `--plate-w` (the plate's width), the paper and ink colours,
-and `--traj-a/b/c`, the three trajectories' colours on the plate. The dark
-theme is immediately below.
+margin notes), the paper, sheet and ink colours, and the background's
+colours. The dark theme is immediately below.
 
 ---
 
-## The plate
+## The background
 
 `src/assets/js/lorenz.js` integrates the Lorenz system
 
@@ -122,24 +123,23 @@ dy/dt = x(ρ − z) − y  ρ = 28
 dz/dt = xy − βz       β = 8/3
 ```
 
-with fourth-order Runge–Kutta at a fixed step. Three trajectories, *a*, *b*
-and *c*, start from one point with *b* and *c* displaced 10⁻⁵ in *z*. Drawn
-with additive light, they read as a single white line until they diverge
-into three colours. A faint atlas, one long trajectory, shows the whole
-attractor behind them. The caption reports *t*, *a*'s position, and |a−b|,
-with a log-scale sparkline whose slope is the Lyapunov exponent. *Re-run*
-starts a fresh experiment from a new point.
+with fourth-order Runge–Kutta at a fixed step, behind every page. A faint
+atlas (one long trajectory) draws the whole attractor, and three live
+trajectories, begun 10⁻⁵ apart, trace over it. It is drawn in ink in the light
+theme and in light in the dark one; the colours, the blending and where the
+figure sits are CSS custom properties (`--traj-a/b/c`, `--atlas`,
+`--atlas-alpha`, `--trail-alpha`, `--trail-blend`, `--bg-focus-y`,
+`--bg-width`, `--bg-height`) at the top of `library.css`.
 
-It is built to stay out of the way of reading. It rests when scrolled off
-screen or in a hidden tab. Under `prefers-reduced-motion` it runs the
-experiment out of sight and shows the result as a still figure. It samples
-its own frame times, and if they slip it lowers its resolution, then shortens
-its trails, then stops.
+The text sits on a sheet (`--sheet`, 88% opaque) so the background can never
+make it hard to read. *Still* in the header stops the motion and remembers
+the choice; under `prefers-reduced-motion` it never moves; it rests in hidden
+tabs; and if frames get slow it lowers its resolution, then shortens its
+trails, then stops.
 
-Knobs, near the top of the file: `STEPS_PER_FRAME` (speed), `TRAIL` (how
-much of each run stays lit), `D0` (the initial disagreement), `ATLAS_N` (the
-density of the faint atlas), `SWING` and `RATE` (the slow rocking of the
-view).
+Knobs near the top of the script: `STEPS_PER_FRAME` (speed), `TRAIL` (how
+much of each path stays lit), `ATLAS_N` (density of the faint atlas), `SWING`
+and `RATE` (the slow rocking of the view).
 
 ---
 
@@ -230,9 +230,9 @@ output directory to `_site`, and put its `*.pages.dev` address in `hostUrl`.
 src/
   _data/site.js            ← title, domain, author, stage vocabulary
   _data/redirects.js       ← old addresses that forward to new ones
-  _includes/layouts/       ← base (page + plate), note, page
+  _includes/layouts/       ← base (sheet over background), note, page
   assets/css/library.css   ← the whole visual system
-  assets/js/lorenz.js      ← the plate
+  assets/js/lorenz.js      ← the background
   assets/js/graph.js       ← the neighbourhood figures and the map
   assets/js/library.js     ← search, sidenotes, theme, catalogue filter
   notes/*.md               ← the library

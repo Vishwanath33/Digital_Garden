@@ -54,7 +54,7 @@ const canvasPainted = (p, sel) =>
     return false;
   }, sel);
 
-// --- the plate --------------------------------------------------------------
+// --- the background -------------------------------------------------------------
 {
   const { ctx, p, problems } = await page();
   await p.goto(BASE, { waitUntil: "networkidle" });
@@ -63,22 +63,32 @@ const canvasPainted = (p, sel) =>
   check(problems.length === 0, `every request resolves and no script errors${problems.length ? " — " + problems.join(", ") : ""}`);
   check(await p.evaluate(() => document.fonts.check('20px "Newsreader"') && document.fonts.check('12px "IBM Plex Mono"')), "self-hosted fonts loaded (Newsreader, Plex Mono)");
 
-  check(await p.evaluate(() => window.__lorenz.running), "plate running");
-  check(await canvasPainted(p, "[data-plate-canvas]"), "plate drawn");
-  const early = await p.evaluate(() => ({ t: window.__lorenz.t, d: window.__lorenz.separation }));
-  await p.waitForTimeout(7000);
-  const later = await p.evaluate(() => ({ t: window.__lorenz.t, d: window.__lorenz.separation }));
-  check(later.t > early.t + 3, `time advances (t ${early.t.toFixed(1)} → ${later.t.toFixed(1)})`);
-  check(later.d > early.d * 20, `trajectories diverge (|a−b| ${early.d.toExponential(1)} → ${later.d.toExponential(1)})`);
-  check((await p.locator('[data-readout="delta"]').innerText()).length > 0 && (await p.locator('[data-readout="t"]').innerText()).trim() !== "0.00", "caption readout updates");
-  check(await p.evaluate(() => window.__lorenz.sparkSamples) > 10 && (await canvasPainted(p, "[data-spark]")), "separation sparkline drawn");
+  check(await p.evaluate(() => window.__lorenz.running), "background running");
+  check(await canvasPainted(p, "[data-lorenz]"), "background drawn");
+  check(await p.locator(".plate, [data-plate]").count() === 0, "no plate or caption: the attractor is background only");
+  const bg = await p.evaluate(() => {
+    const r = document.querySelector("[data-lorenz]").getBoundingClientRect();
+    return { w: r.width, h: r.height, z: getComputedStyle(document.querySelector("[data-lorenz]")).zIndex, pos: getComputedStyle(document.querySelector("[data-lorenz]")).position };
+  });
+  check(bg.pos === "fixed" && bg.w === 1920 && bg.h === 1080, "background covers the whole screen, fixed");
 
-  await p.click("[data-plate-toggle]");
-  check(await p.evaluate(() => !window.__lorenz.running) && (await p.locator("[data-plate-toggle]").innerText()).toLowerCase() === "play", "Pause stops the plate");
-  await p.click("[data-plate-toggle]");
-  check(await p.evaluate(() => window.__lorenz.running), "Play resumes it");
-  await p.click("[data-plate-rerun]");
-  check(await p.evaluate(() => window.__lorenz.t < 1 && window.__lorenz.separation < 1e-3), "Re-run starts a fresh experiment");
+  // The sheet keeps the text readable over it.
+  const sheetAlpha = await p.evaluate(() => {
+    const m = getComputedStyle(document.querySelector(".page")).backgroundColor.match(/rgba?\(([^)]+)\)/);
+    const parts = m[1].split(",").map(Number);
+    return parts.length === 4 ? parts[3] : 1;
+  });
+  check(sheetAlpha >= 0.8, `text sits on a sheet at least 80% opaque (${sheetAlpha})`);
+
+  // Still / Motion, remembered.
+  await p.click("[data-motion-toggle]");
+  check(await p.evaluate(() => !window.__lorenz.running) && (await p.locator("[data-motion-toggle]").innerText()).toLowerCase() === "motion", "Still stops the background");
+  check(await canvasPainted(p, "[data-lorenz]"), "…leaving it drawn, not blank");
+  await p.reload({ waitUntil: "networkidle" });
+  await p.waitForTimeout(400);
+  check(await p.evaluate(() => !window.__lorenz.running), "the choice is remembered across pages");
+  await p.click("[data-motion-toggle]");
+  check(await p.evaluate(() => window.__lorenz.running), "Motion starts it again");
 
   // Theme: two states, named for the one it switches to, persisted.
   const label = await p.locator("[data-theme-toggle]").innerText();
@@ -208,14 +218,20 @@ const canvasPainted = (p, sel) =>
   await ctx.close();
 }
 
-// --- a narrower desktop: sidenotes fold inline -----------------------------------
+// --- sidenotes by width: in the margin on a laptop, folded on a narrow sheet --------
 {
-  const { ctx, p } = await page({ viewport: { width: 1366, height: 900 } });
+  let { ctx, p } = await page({ viewport: { width: 1366, height: 900 } });
   await p.goto(`${BASE}notes/lorenz-attractor/`, { waitUntil: "networkidle" });
   await p.waitForTimeout(400);
-  check(!(await p.locator(".sidenote").first().isVisible()), "narrow page: sidenote folded away");
+  check(await p.locator(".sidenote").first().isVisible(), "1366px: sidenote in the margin");
+  await ctx.close();
+
+  ({ ctx, p } = await page({ viewport: { width: 820, height: 900 } }));
+  await p.goto(`${BASE}notes/lorenz-attractor/`, { waitUntil: "networkidle" });
+  await p.waitForTimeout(400);
+  check(!(await p.locator(".sidenote").first().isVisible()), "820px: sidenote folded away");
   await p.locator(".sidenote-number").first().click();
-  check(await p.locator(".sidenote").first().isVisible(), "narrow page: sidenote folds out when its number is clicked");
+  check(await p.locator(".sidenote").first().isVisible(), "820px: sidenote folds out when its number is clicked");
   await ctx.close();
 }
 
@@ -226,17 +242,14 @@ const canvasPainted = (p, sel) =>
   await p.waitForTimeout(600);
   check(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "no horizontal scroll on a phone");
   const order = await p.evaluate(() =>
-    [".running-head", ".plate", ".entry__title", ".foot"].map((s) => document.querySelector(s).getBoundingClientRect().top),
+    [".running-head", ".entry__title", ".foot"].map((s) => document.querySelector(s).getBoundingClientRect().top),
   );
-  check(order.every((v, i) => i === 0 || v > order[i - 1]), "phone order: running head, plate, text, foot");
-  check(await p.evaluate(() => window.__lorenz.running), "phone: plate runs while on screen");
-  // Instant, not smooth: the page scrolls smoothly, and the test should not wait on the animation.
-  await p.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: "instant" }));
-  await p.waitForTimeout(500);
-  check(await p.evaluate(() => !window.__lorenz.running), "phone: plate rests once scrolled away");
-  await p.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
-  await p.waitForTimeout(500);
-  check(await p.evaluate(() => window.__lorenz.running), "phone: plate resumes when back in view");
+  check(order.every((v, i) => i === 0 || v > order[i - 1]), "phone order: running head, text, foot");
+  check(await p.evaluate(() => document.querySelector(".page").getBoundingClientRect().top < 40), "phone: an entry starts at the top of the screen");
+  await p.goto(BASE, { waitUntil: "networkidle" });
+  await p.waitForTimeout(400);
+  check(await p.evaluate(() => document.querySelector(".page").getBoundingClientRect().top > innerHeight * 0.3), "phone: the home page opens on the background, like a cover");
+  check(await p.evaluate(() => window.__lorenz.running), "phone: background running");
   await ctx.close();
 }
 
@@ -245,10 +258,9 @@ const canvasPainted = (p, sel) =>
   const { ctx, p } = await page({ reducedMotion: "reduce" });
   await p.goto(BASE, { waitUntil: "networkidle" });
   await p.waitForTimeout(800);
-  const st = await p.evaluate(() => ({ running: window.__lorenz.running, t: window.__lorenz.t, d: window.__lorenz.separation }));
-  check(!st.running, "plate does not animate under prefers-reduced-motion");
-  check(st.t > 25 && st.d > 1e-2, `…but shows the finished experiment (t ${st.t.toFixed(0)}, |a−b| ${st.d.toFixed(2)})`);
-  check(await canvasPainted(p, "[data-plate-canvas]"), "…drawn as a still figure");
+  check(await p.evaluate(() => !window.__lorenz.running), "background does not move under prefers-reduced-motion");
+  check(await canvasPainted(p, "[data-lorenz]"), "…but is drawn, as a still figure");
+  check(await p.locator("[data-motion-toggle]").isHidden(), "…and the Still switch, which would do nothing, is hidden");
   await ctx.close();
 }
 
