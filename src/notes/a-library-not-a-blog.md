@@ -23,7 +23,7 @@ A library inverts the defaults:
 - **Subject over chronology.** Entries are shelved by what they are about
   and found by what cites them, not by when they were written. The
   [catalogue](/notes/) is sorted by date only because it has to be sorted by
-  something; the shelves in the Explore panel are the real order.
+  something; the shelves in the [contents](/) are the real order.
 - **Revision over accretion.** When I learn something, I correct the entry.
   The entry is the current state of my thinking; its revision history is the
   record of how it got there.
@@ -31,8 +31,9 @@ A library inverts the defaults:
   *manuscript* does not, so it can go on the shelf at a stage where a post
   could not. See [[epistemic-status|epistemic status]].
 - **Cross-references.** The value is in the connections. Entries cite each
-  other, every entry lists what cites it back, and the graph shows the whole
-  web at once, so the structure is legible from anywhere in it.
+  other, every entry's catalogue card lists what cites it back, and the
+  [map](/map/) shows the whole web at once, so the structure is legible from
+  anywhere in it.
 
 ## The obvious objection
 

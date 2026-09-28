@@ -54,47 +54,74 @@ const canvasPainted = (p, sel) =>
     return false;
   }, sel);
 
-// --- an entry, desktop -----------------------------------------------------
+// --- the plate --------------------------------------------------------------
+{
+  const { ctx, p, problems } = await page();
+  await p.goto(BASE, { waitUntil: "networkidle" });
+  await p.waitForTimeout(800);
+
+  check(problems.length === 0, `every request resolves and no script errors${problems.length ? " — " + problems.join(", ") : ""}`);
+  check(await p.evaluate(() => document.fonts.check('20px "Newsreader"') && document.fonts.check('12px "IBM Plex Mono"')), "self-hosted fonts loaded (Newsreader, Plex Mono)");
+
+  check(await p.evaluate(() => window.__lorenz.running), "plate running");
+  check(await canvasPainted(p, "[data-plate-canvas]"), "plate drawn");
+  const early = await p.evaluate(() => ({ t: window.__lorenz.t, d: window.__lorenz.separation }));
+  await p.waitForTimeout(7000);
+  const later = await p.evaluate(() => ({ t: window.__lorenz.t, d: window.__lorenz.separation }));
+  check(later.t > early.t + 3, `time advances (t ${early.t.toFixed(1)} → ${later.t.toFixed(1)})`);
+  check(later.d > early.d * 20, `trajectories diverge (|a−b| ${early.d.toExponential(1)} → ${later.d.toExponential(1)})`);
+  check((await p.locator('[data-readout="delta"]').innerText()).length > 0 && (await p.locator('[data-readout="t"]').innerText()).trim() !== "0.00", "caption readout updates");
+  check(await p.evaluate(() => window.__lorenz.sparkSamples) > 10 && (await canvasPainted(p, "[data-spark]")), "separation sparkline drawn");
+
+  await p.click("[data-plate-toggle]");
+  check(await p.evaluate(() => !window.__lorenz.running) && (await p.locator("[data-plate-toggle]").innerText()).toLowerCase() === "play", "Pause stops the plate");
+  await p.click("[data-plate-toggle]");
+  check(await p.evaluate(() => window.__lorenz.running), "Play resumes it");
+  await p.click("[data-plate-rerun]");
+  check(await p.evaluate(() => window.__lorenz.t < 1 && window.__lorenz.separation < 1e-3), "Re-run starts a fresh experiment");
+
+  // Theme: two states, named for the one it switches to, persisted.
+  const label = await p.locator("[data-theme-toggle]").innerText();
+  await p.click("[data-theme-toggle]");
+  const after = await p.getAttribute("html", "data-theme");
+  check(after === label.trim().toLowerCase(), `theme switch changes to ${after}`);
+  check(await p.evaluate(() => localStorage.getItem("library-theme")) === after, "theme choice persisted");
+
+  // Title page contents.
+  check(await p.locator(".part").count() === 3, "contents grouped into three parts");
+  check(await p.locator(".contents .toc__item").count() === 5, "contents lists every entry");
+  await ctx.close();
+}
+
+// --- an entry ---------------------------------------------------------------------
 {
   const { ctx, p, problems } = await page();
   await p.goto(`${BASE}notes/lorenz-attractor/`, { waitUntil: "networkidle" });
-  await p.waitForTimeout(1200);
+  await p.waitForTimeout(1000);
+  check(problems.length === 0, "entry: every request resolves");
+  check((await p.locator(".kicker").innerText()).includes("CH 001"), "entry carries its call number");
 
-  check(problems.length === 0, `every request resolves and no script errors${problems.length ? " — " + problems.join(", ") : ""}`);
-  check(await p.evaluate(() => getComputedStyle(document.body).fontFamily.includes("Source Sans 3")), "stylesheet applied (Source Sans 3 in effect)");
-  check(await p.evaluate(() => document.fonts.check('16px "Source Sans 3"') && document.fonts.check('16px "Lora"')), "self-hosted fonts loaded");
-
-  // Layout furniture.
-  check((await p.locator(".crumbs").innerText()).includes("Chaos"), "breadcrumbs show the shelf");
-  check(await p.locator(".stacks details[open] > summary", { hasText: "Chaos" }).count() === 1, "Explore opens the current shelf");
-  check(await p.locator('.stacks a[aria-current="page"]').count() === 1, "Explore marks the current entry");
-  check((await p.locator(".backlinks").innerText()).includes("Sensitive dependence"), "Backlinks lists the citing entry");
-  check(await p.locator(".toc-list li").count() === 3, "Contents built from the entry's headings");
-
-  // Sidenotes: the card is wide enough at 1920 for the margin.
-  check(await p.locator(".sidenote").first().isVisible(), "sidenote shown in the card's margin");
+  // Sidenotes in the outer margin at 1920.
+  check(await p.locator(".sidenote").first().isVisible(), "sidenote shown in the outer margin");
   const sn = await p.locator(".sidenote").first().boundingBox();
   const prose = await p.locator(".prose").boundingBox();
-  check(sn && prose && sn.x > prose.x + prose.width - 240, "sidenote sits right of the text column");
+  check(sn && prose && sn.x > prose.x + prose.width, "sidenote sits right of the text column");
   check(!(await p.locator(".footnotes").isVisible()), "redundant endnote list hidden");
 
-  // Graph View.
+  // The catalogue card.
+  const card = await p.locator(".card").innerText();
+  check(/1\. Chaos\. 2\. Mathematics\. 3\. Models\./.test(card), "card lists subject tracings");
+  check(card.includes("Cited by") && card.includes("Sensitive dependence"), "card lists what cites the entry");
+  check(card.includes("Cites") && card.includes("Epistemic status"), "card lists what the entry cites");
+
+  // Its neighbourhood figure.
   const local = await p.evaluate(() => {
     const g = window.__graph.local;
     return { n: g.nodes.length, hasCurrent: g.nodes.some((x) => x.id === document.body.dataset.page) };
   });
-  check(local.n >= 3 && local.hasCurrent, `local graph shows the entry and its neighbours (${local.n} nodes)`);
-  check(await canvasPainted(p, '[data-graph="local"]'), "local graph is drawn");
-
-  await p.click("[data-graph-expand]");
-  await p.waitForTimeout(600);
-  const all = await p.evaluate(() => fetch(document.getElementById("graph-src").href).then((r) => r.json()));
-  check(await p.locator("[data-graph-overlay]").isVisible(), "expand opens the whole-library graph");
-  check(await p.evaluate(() => window.__graph.global.nodes.length) === all.nodes.length, `overlay graph shows every node (${all.nodes.length})`);
-  await p.keyboard.press("Escape");
-  check(!(await p.locator("[data-graph-overlay]").isVisible()), "Escape closes the graph");
-
-  // Clicking a node opens that entry.
+  check(local.n >= 3 && local.hasCurrent, `neighbourhood figure shows the entry and its neighbours (${local.n} nodes)`);
+  await p.locator("[data-graph]").scrollIntoViewIfNeeded();
+  await p.waitForTimeout(300);
   const target = await p.evaluate(() => {
     const g = window.__graph.local;
     const n = g.nodes.find((x) => x.type === "note" && x.id !== document.body.dataset.page);
@@ -103,33 +130,27 @@ const canvasPainted = (p, sel) =>
     return { x: r.left + x, y: r.top + y, href: n.href };
   });
   await Promise.all([p.waitForURL((u) => u.pathname === target.href), p.mouse.click(target.x, target.y)]);
-  check(new URL(p.url()).pathname === target.href, "clicking a graph node opens it");
-
-  // Theme: two states, persisted.
-  await p.goto(`${BASE}notes/lorenz-attractor/`, { waitUntil: "networkidle" });
-  const before = await p.evaluate(() => matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-  await p.click("[data-theme-toggle]");
-  const after = await p.getAttribute("html", "data-theme");
-  check(after && after !== before, `theme toggle switches ${before} → ${after}`);
-  check(await p.evaluate(() => localStorage.getItem("library-theme")) === after, "theme choice persisted");
-
-  // The attractor switch.
-  check(await p.evaluate(() => window.__lorenz.running), "attractor running");
-  await p.click("[data-motion-toggle]");
-  check(await p.evaluate(() => !window.__lorenz.running) && (await p.getAttribute("[data-motion-toggle]", "aria-pressed")) === "true", "badge pauses the attractor");
-  await p.click("[data-motion-toggle]");
-  check(await p.evaluate(() => window.__lorenz.running), "badge resumes the attractor");
+  check(new URL(p.url()).pathname === target.href, "selecting a node opens that entry");
 
   check(await p.evaluate(() => getComputedStyle(document.querySelector(".header-anchor")).opacity === "0"), "heading permalink hidden until hover");
   await ctx.close();
 }
 
-// --- search ------------------------------------------------------------------
+// --- the map --------------------------------------------------------------------
+{
+  const { ctx, p } = await page();
+  await p.goto(`${BASE}map/`, { waitUntil: "networkidle" });
+  await p.waitForTimeout(800);
+  const all = await p.evaluate(() => fetch(document.getElementById("graph-src").href).then((r) => r.json()));
+  check(await p.evaluate(() => window.__graph.global.nodes.length) === all.nodes.length, `map shows every node (${all.nodes.length})`);
+  check(await canvasPainted(p, '[data-graph="global"]'), "map drawn");
+  await ctx.close();
+}
+
+// --- search ------------------------------------------------------------------------
 {
   const { ctx, p } = await page();
   await p.goto(BASE, { waitUntil: "networkidle" });
-  check(await p.locator("svg.bookshelf").count() === 1, "home page carries the engraved banner");
-
   await p.keyboard.press("/");
   await p.waitForTimeout(150);
   check(await p.locator("[data-search]").isVisible(), "'/' opens search");
@@ -137,16 +158,14 @@ const canvasPainted = (p, sel) =>
   await p.waitForTimeout(400);
   const titles = await p.locator(".search__title").allInnerTexts();
   check(titles.length >= 1 && titles[0].startsWith("Sensitive dependence"), `search ranks the best match first (${titles.length} results)`);
-  check(await p.locator(".search__result mark").count() > 0, "search highlights matched terms");
-
+  check((await p.locator(".search__call").first().innerText()).trim() === "004", "results carry accession numbers");
+  check(await p.locator(".search__result mark").count() > 0, "search marks matched terms");
   await p.keyboard.press("ArrowDown");
-  check((await p.locator('.search__result[aria-selected="true"]').count()) === 1 &&
-        (await p.locator(".search__result").nth(1).getAttribute("aria-selected")) === "true", "arrow keys move the selection");
+  check((await p.locator(".search__result").nth(1).getAttribute("aria-selected")) === "true", "arrow keys move the selection");
   await p.keyboard.press("ArrowUp");
   const href = await p.locator(".search__result a").first().getAttribute("href");
   await Promise.all([p.waitForURL((u) => u.pathname === href), p.keyboard.press("Enter")]);
-  check(new URL(p.url()).pathname === href, "Enter opens the selected result");
-
+  check(new URL(p.url()).pathname === href, "return opens the selected result");
   await p.keyboard.press("Control+k");
   check(await p.locator("[data-search]").isVisible(), "Ctrl+K opens search");
   await p.keyboard.type("zzzqqq");
@@ -157,7 +176,7 @@ const canvasPainted = (p, sel) =>
   await ctx.close();
 }
 
-// --- reshelved entries still land ---------------------------------------------
+// --- reshelved entries still land -------------------------------------------------
 {
   const { ctx, p } = await page();
   for (const [from, to] of [["notes/digital-gardens/", "notes/a-library-not-a-blog/"], ["notes/tending/", "notes/keeping-the-stacks/"]]) {
@@ -168,58 +187,68 @@ const canvasPainted = (p, sel) =>
   await ctx.close();
 }
 
-// --- catalogue filter --------------------------------------------------------
+// --- catalogue and subjects -------------------------------------------------------
 {
   const { ctx, p } = await page();
   await p.goto(`${BASE}notes/`, { waitUntil: "networkidle" });
-  const total = await p.locator(".entry:visible").count();
+  const total = await p.locator(".toc__item:visible").count();
   await p.fill("#filter", "chaos");
   await p.waitForTimeout(100);
-  const filtered = await p.locator(".entry:visible").count();
+  const filtered = await p.locator(".toc__item:visible").count();
   check(filtered === 2 && filtered < total, `catalogue filter narrows ${total} entries to ${filtered}`);
   await p.fill("#filter", "zzzznothing");
   await p.waitForTimeout(100);
   check(await p.locator("[data-filter-empty]").isVisible(), "catalogue shows its empty state");
   await p.locator("#filter").press("Escape");
-  check(await p.locator(".entry:visible").count() === total, "Escape clears the filter");
+  check(await p.locator(".toc__item:visible").count() === total, "Escape clears the filter");
+
+  await p.goto(`${BASE}tags/`, { waitUntil: "networkidle" });
+  const heads = await p.locator(".subject__head").allInnerTexts();
+  check(heads.length > 3 && heads.every((h, i) => i === 0 || heads[i - 1].localeCompare(h) <= 0), "subject index is alphabetical");
   await ctx.close();
 }
 
-// --- a narrower desktop: sidenotes fold inline ------------------------------
+// --- a narrower desktop: sidenotes fold inline -----------------------------------
 {
   const { ctx, p } = await page({ viewport: { width: 1366, height: 900 } });
   await p.goto(`${BASE}notes/lorenz-attractor/`, { waitUntil: "networkidle" });
-  await p.waitForTimeout(500);
-  check(!(await p.locator(".sidenote").first().isVisible()), "narrow card: sidenote folded away");
+  await p.waitForTimeout(400);
+  check(!(await p.locator(".sidenote").first().isVisible()), "narrow page: sidenote folded away");
   await p.locator(".sidenote-number").first().click();
-  check(await p.locator(".sidenote").first().isVisible(), "narrow card: sidenote folds out when its number is clicked");
+  check(await p.locator(".sidenote").first().isVisible(), "narrow page: sidenote folds out when its number is clicked");
   await ctx.close();
 }
 
-// --- mobile --------------------------------------------------------------------
+// --- phone ----------------------------------------------------------------------------
 {
   const { ctx, p } = await page({ viewport: { width: 390, height: 844 } });
   await p.goto(`${BASE}notes/lorenz-attractor/`, { waitUntil: "networkidle" });
   await p.waitForTimeout(600);
   check(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "no horizontal scroll on a phone");
   const order = await p.evaluate(() =>
-    [".brand", ".card", ".explore", ".graph-panel"].map((s) => document.querySelector(s).getBoundingClientRect().top),
+    [".running-head", ".plate", ".entry__title", ".foot"].map((s) => document.querySelector(s).getBoundingClientRect().top),
   );
-  check(order.every((v, i) => i === 0 || v > order[i - 1]), "phone order: title, page, shelves, graph");
-  check(!(await p.locator(".sidenote").first().isVisible()), "phone: sidenote folded away");
-  await p.locator(".sidenote-number").first().click();
-  check(await p.locator(".sidenote").first().isVisible(), "phone: sidenote folds out when tapped");
+  check(order.every((v, i) => i === 0 || v > order[i - 1]), "phone order: running head, plate, text, foot");
+  check(await p.evaluate(() => window.__lorenz.running), "phone: plate runs while on screen");
+  // Instant, not smooth: the page scrolls smoothly, and the test should not wait on the animation.
+  await p.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: "instant" }));
+  await p.waitForTimeout(500);
+  check(await p.evaluate(() => !window.__lorenz.running), "phone: plate rests once scrolled away");
+  await p.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+  await p.waitForTimeout(500);
+  check(await p.evaluate(() => window.__lorenz.running), "phone: plate resumes when back in view");
   await ctx.close();
 }
 
-// --- reduced motion ------------------------------------------------------------
+// --- reduced motion ------------------------------------------------------------------
 {
   const { ctx, p } = await page({ reducedMotion: "reduce" });
   await p.goto(BASE, { waitUntil: "networkidle" });
   await p.waitForTimeout(800);
-  check(await p.evaluate(() => !window.__lorenz.running), "attractor still under prefers-reduced-motion");
-  check(await canvasPainted(p, "#lorenz"), "…but it renders one frame");
-  check(await canvasPainted(p, '[data-graph="local"]'), "…and the graph still draws");
+  const st = await p.evaluate(() => ({ running: window.__lorenz.running, t: window.__lorenz.t, d: window.__lorenz.separation }));
+  check(!st.running, "plate does not animate under prefers-reduced-motion");
+  check(st.t > 25 && st.d > 1e-2, `…but shows the finished experiment (t ${st.t.toFixed(0)}, |a−b| ${st.d.toFixed(2)})`);
+  check(await canvasPainted(p, "[data-plate-canvas]"), "…drawn as a still figure");
   await ctx.close();
 }
 

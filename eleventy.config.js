@@ -7,7 +7,6 @@ import markdownItFootnote from "markdown-it-footnote";
 import markdownItAnchor from "markdown-it-anchor";
 import markdownItAttrs from "markdown-it-attrs";
 import siteData from "./src/_data/site.js";
-import { bookshelf } from "./lib/bookshelf.js";
 
 const NOTES_GLOB = "src/notes/*.md";
 const NOTE_URL = (slug) => `/notes/${slug}/`;
@@ -57,11 +56,12 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({ "src/static": "." });
   // Self-hosted type: no third-party font requests.
   eleventyConfig.addPassthroughCopy({
-    "node_modules/@fontsource-variable/source-sans-3/files/source-sans-3-latin-wght-*.woff2": "assets/fonts",
-    "node_modules/@fontsource-variable/lora/files/lora-latin-wght-*.woff2": "assets/fonts",
+    "node_modules/@fontsource-variable/newsreader/files/newsreader-latin-standard-*.woff2": "assets/fonts",
+    // Globs, both: a plain file path here would be copied *to* assets/fonts
+    // as a file, not into it as a folder.
+    "node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-{400-normal,500-normal,400-italic}.woff2": "assets/fonts",
   });
   eleventyConfig.addWatchTarget("src/assets/");
-  eleventyConfig.addWatchTarget("lib/");
 
   // --- markdown -----------------------------------------------------------
   eleventyConfig.amendLibrary("md", (lib) => {
@@ -181,29 +181,55 @@ export default function (eleventyConfig) {
   });
 
   /**
-   * The stacks: notes arranged by their `shelf` front matter ("Chaos", or
-   * nested as "Method/Craft"). Notes without a shelf sit at the top level.
-   * Shelves and notes are interleaved alphabetically, as on a real shelf.
+   * Accession numbers: entries numbered in the order they were written, as a
+   * library numbers what it acquires. The call number prefixes the shelf.
    */
-  eleventyConfig.addCollection("stacks", (api) => {
-    const root = { name: "", shelves: new Map(), notes: [] };
-    for (const note of published(api)) {
-      let node = root;
-      for (const part of String(note.data.shelf || "").split("/").map((s) => s.trim()).filter(Boolean)) {
-        if (!node.shelves.has(part)) node.shelves.set(part, { name: part, shelves: new Map(), notes: [] });
-        node = node.shelves.get(part);
-      }
-      node.notes.push({ title: note.data.title, url: note.url });
+  eleventyConfig.addCollection("accession", (api) => {
+    const notes = published(api).sort(
+      (a, b) => (a.data.created || a.date) - (b.data.created || b.date) || byTitle(a.data.title, b.data.title),
+    );
+    const out = {};
+    notes.forEach((n, i) => {
+      const number = String(i + 1).padStart(3, "0");
+      const shelf = String(n.data.shelf || "").split("/")[0].trim();
+      const prefix = shelf ? shelf.replace(/[^A-Za-z]/g, "").slice(0, 2).toUpperCase() : "GN";
+      out[n.url] = { number, call: `${prefix} ${number}` };
+    });
+    return out;
+  });
+
+  /** What each entry cites: the other half of backlinks. */
+  eleventyConfig.addCollection("cites", (api) => {
+    const notes = published(api);
+    const byUrl = new Map(notes.map((n) => [n.url, n]));
+    const out = {};
+    for (const note of notes) {
+      out[note.url] = [...outgoing(note)]
+        .filter((u) => byUrl.has(u))
+        .map((u) => ({ url: u, title: byUrl.get(u).data.title }))
+        .sort((a, b) => byTitle(a.title, b.title));
     }
-    const flatten = (node, trail) =>
-      [
-        ...[...node.shelves.values()].map((s) => {
-          const p = [...trail, s.name];
-          return { type: "shelf", name: s.name, path: p.join("/"), children: flatten(s, p) };
-        }),
-        ...node.notes.map((n) => ({ type: "note", ...n })),
-      ].sort((a, b) => byTitle(a.name || a.title, b.name || b.title));
-    return flatten(root, []);
+    return out;
+  });
+
+  /**
+   * Parts of the book: entries grouped by top-level shelf, for the contents
+   * on the title page. Unshelved entries come first, as general matter.
+   */
+  eleventyConfig.addCollection("parts", (api) => {
+    const groups = new Map();
+    for (const n of published(api)) {
+      const shelf = String(n.data.shelf || "").split("/")[0].trim();
+      if (!groups.has(shelf)) groups.set(shelf, []);
+      groups.get(shelf).push(n);
+    }
+    const order = [...groups.keys()].sort((a, b) => (a === "" ? -1 : b === "" ? 1 : byTitle(a, b)));
+    const roman = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+    return order.map((shelf, i) => ({
+      numeral: roman[i] || String(i + 1),
+      name: shelf || "General",
+      notes: groups.get(shelf).sort((a, b) => (a.data.created || a.date) - (b.data.created || b.date)),
+    }));
   });
 
   // --- filters ------------------------------------------------------------
@@ -263,10 +289,11 @@ export default function (eleventyConfig) {
   });
 
   /** The search index: one record per note, text capped to keep it small. */
-  eleventyConfig.addFilter("searchIndex", (notes) =>
+  eleventyConfig.addFilter("searchIndex", (notes, accession = {}) =>
     JSON.stringify(
       notes.map((n) => ({
         href: withBase(n.url),
+        number: accession[n.url]?.number || "",
         title: n.data.title,
         summary: n.data.summary || "",
         shelf: n.data.shelf || "",
@@ -291,9 +318,6 @@ export default function (eleventyConfig) {
   eleventyConfig.addPairedShortcode("epigraph", (content, source = "") =>
     `<blockquote class="epigraph">${md.render(content.trim())}${source ? `<cite>${source}</cite>` : ""}</blockquote>`,
   );
-
-  let shelfSvg;
-  eleventyConfig.addShortcode("bookshelf", () => (shelfSvg ||= bookshelf()));
 
   // --- feed ---------------------------------------------------------------
   eleventyConfig.addPlugin(feedPlugin, {

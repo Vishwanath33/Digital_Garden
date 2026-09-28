@@ -1,66 +1,62 @@
 ---
 layout: layouts/base.njk
 ---
-{% set st = site.stages[stage] or site.stages.manuscript %}
+{%- set st = site.stages[stage] or site.stages.manuscript -%}
+{%- set acc = collections.accession | lookup(page.url) -%}
+{%- set cites = collections.cites | lookup(page.url) -%}
+{%- set citedBy = collections.backlinks | lookup(page.url) -%}
+{%- set shelfName = shelf or "General" -%}
 
-<article>
-  <header class="entry-head">
-    <h1 class="entry-title">{{ title }}</h1>
-    {% if summary %}<p class="entry-summary">{{ summary }}</p>{% endif %}
-
-    <div class="meta">
-      <dl>
-        <dt>Stage</dt>
-        <dd><span class="stage stage--{{ st.label }}" title="{{ st.blurb }}">{{ st.label }}</span></dd>
-      </dl>
-      <dl>
-        <dt>Written</dt>
-        <dd><time datetime="{{ (created or page.date) | shortDate }}">{{ (created or page.date) | readableDate }}</time></dd>
-      </dl>
-      {% if updated %}
-      <dl>
-        <dt>Revised</dt>
-        <dd><time datetime="{{ updated | shortDate }}">{{ updated | readableDate }}</time></dd>
-      </dl>
-      {% endif %}
-      {% if certainty %}
-      <dl>
-        <dt>Certainty</dt>
-        <dd>{{ certainty }}</dd>
-      </dl>
-      {% endif %}
-      {% if importance %}
-      <dl>
-        <dt>Importance</dt>
-        <dd>{{ importance }}/10</dd>
-      </dl>
-      {% endif %}
-      <dl>
-        <dt>Length</dt>
-        <dd>{{ content | readingTime }} min</dd>
-      </dl>
-      {% if tags and tags.length %}
-      <dl class="meta__wide">
-        <dt>Subjects</dt>
-        <dd>
-          <span class="tag-list">
-            {% for tag in tags %}<a class="tag" href="/tags/#{{ tag }}">{{ tag }}</a>{% endfor %}
-          </span>
-        </dd>
-      </dl>
-      {% endif %}
-    </div>
+<article class="entry{% if 'footnote-ref' in content %} entry--notes{% endif %}">
+  <header class="entry__head">
+    <p class="kicker"><span class="kicker__call">{{ acc.call }}</span><span class="kicker__sep">·</span>{{ shelfName }}</p>
+    <h1 class="entry__title">{{ title }}</h1>
+    {% if summary %}<p class="entry__dek">{{ summary }}</p>{% endif %}
+    <p class="entry__line">
+      <span class="stage" title="{{ st.blurb }}"><span aria-hidden="true">{{ st.glyph }}</span> {{ st.label }}</span>
+      {% if certainty %}<span>certainty {{ certainty }}</span>{% endif %}
+      <span>{{ content | readingTime }} min</span>
+      <span>{% if updated %}revised <time datetime="{{ updated | shortDate }}">{{ updated | readableDate }}</time>{% else %}written <time datetime="{{ (created or page.date) | shortDate }}">{{ (created or page.date) | readableDate }}</time>{% endif %}</span>
+    </p>
   </header>
 
-  <div class="prose prose--dropcap" data-sidenotes>
+  <div class="prose" data-sidenotes>
     {{ content | safe }}
   </div>
 
-  {% if site.sourcePublic %}
-  <p class="entry-source">
-    <a href="{{ site.repo }}/commits/{{ site.repoBranch }}/src/notes/{{ page.fileSlug }}.md">Revision history</a>
-    <span aria-hidden="true">·</span>
-    <a href="{{ site.repo }}/blob/{{ site.repoBranch }}/src/notes/{{ page.fileSlug }}.md">Source</a>
-  </p>
-  {% endif %}
+  <footer class="apparatus" aria-label="About this entry">
+    <figure class="card" aria-labelledby="card-caption">
+      <div class="card__call" aria-label="Call number">{{ acc.call | replace(" ", "<br>") | safe }}</div>
+      <div class="card__body">
+        <p class="card__head">The Lorenz Library</p>
+        <p><b>{{ title }}.</b></p>
+        <p>
+          Written {{ (created or page.date) | readableDate }}{% if updated %}; revised {{ updated | readableDate }}{% endif %}.
+          Stage: {{ st.label }}.{% if certainty %} Certainty: {{ certainty }}.{% endif %}{% if importance %} Importance {{ importance }}/10.{% endif %}
+          {{ content | readingTime }} min.
+        </p>
+        {% if tags and tags.length %}
+        <p class="card__tracings">
+          {% for tag in tags %}{{ loop.index }}. <a href="/tags/#{{ tag }}">{{ tag | capitalize }}</a>. {% endfor %}I. Title.
+        </p>
+        {% endif %}
+        {% if cites and cites.length %}
+        <p><span class="card__label">Cites</span> {% for c in cites %}<a href="{{ c.url }}">{{ c.title }}</a>{% if not loop.last %}; {% endif %}{% endfor %}.</p>
+        {% endif %}
+        <p><span class="card__label">Cited by</span>
+          {% if citedBy and citedBy.length %}{% for c in citedBy %}<a href="{{ c.url }}">{{ c.title }}</a>{% if not loop.last %}; {% endif %}{% endfor %}.{% else %}nothing yet.{% endif %}
+        </p>
+        {% if site.sourcePublic %}
+        <p><a href="{{ site.repo }}/commits/{{ site.repoBranch }}/src/notes/{{ page.fileSlug }}.md">Revision history</a> · <a href="{{ site.repo }}/blob/{{ site.repoBranch }}/src/notes/{{ page.fileSlug }}.md">Source</a></p>
+        {% endif %}
+      </div>
+      <span class="card__hole" aria-hidden="true"></span>
+      <figcaption class="sr-only" id="card-caption">Catalogue card for this entry</figcaption>
+    </figure>
+
+    <figure class="neighbourhood">
+      <canvas class="graph-canvas" data-graph="local" role="img" aria-label="Graph of this entry's citations and subjects"></canvas>
+      <figcaption><span class="fig-label">Fig.</span> This entry among its neighbours: what it cites, what cites it, and its subjects (hollow). Select a node to open it; the <a href="/map/">map</a> shows the whole library.</figcaption>
+    </figure>
+  </footer>
 </article>

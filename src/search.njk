@@ -5,4 +5,4 @@ eleventyExcludeFromCollections: true
 eleventyImport:
   collections: ["notes"]
 ---
-{{ collections.notes | searchIndex | safe }}
+{{ collections.notes | searchIndex(collections.accession) | safe }}

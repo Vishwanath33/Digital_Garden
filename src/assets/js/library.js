@@ -15,29 +15,29 @@
   const systemDark = window.matchMedia("(prefers-color-scheme: dark)");
   const effectiveTheme = () => root.getAttribute("data-theme") || (systemDark.matches ? "dark" : "light");
 
-  document.querySelector("[data-theme-toggle]")?.addEventListener("click", () => {
+  const themeButton = document.querySelector("[data-theme-toggle]");
+  const paintTheme = () => {
+    if (!themeButton) return;
+    const other = effectiveTheme() === "dark" ? "Light" : "Dark";
+    themeButton.textContent = other;
+    themeButton.setAttribute("aria-label", `Switch to the ${other.toLowerCase()} theme`);
+  };
+  paintTheme();
+  themeButton?.addEventListener("click", () => {
     const next = effectiveTheme() === "dark" ? "light" : "dark";
     root.setAttribute("data-theme", next);
     try {
       localStorage.setItem(THEME_KEY, next);
     } catch { /* private mode: the choice just will not persist */ }
+    paintTheme();
     document.dispatchEvent(new CustomEvent("themechange", { detail: { theme: next } }));
   });
   systemDark.addEventListener?.("change", () => {
-    if (!root.getAttribute("data-theme")) document.dispatchEvent(new CustomEvent("themechange"));
+    if (!root.getAttribute("data-theme")) {
+      paintTheme();
+      document.dispatchEvent(new CustomEvent("themechange"));
+    }
   });
-
-  // --- the attractor's switch ---------------------------------------------
-  const badge = document.querySelector("[data-motion-toggle]");
-  if (badge) {
-    const paint = (running) => {
-      badge.setAttribute("aria-pressed", String(!running));
-      badge.title = running ? "Pause the Lorenz attractor" : "Resume the Lorenz attractor";
-    };
-    paint(Boolean(window.__lorenz?.running));
-    document.addEventListener("lorenzchange", (e) => paint(e.detail.running));
-    badge.addEventListener("click", () => window.__lorenz?.toggle());
-  }
 
   // --- footnotes become margin notes --------------------------------------
   const article = document.querySelector("[data-sidenotes]");
@@ -80,42 +80,6 @@
     });
 
     if (notes.size) article.classList.add("has-sidenotes");
-  }
-
-  // --- contents -----------------------------------------------------------
-  const tocHost = document.querySelector("[data-toc]");
-  const prose = document.querySelector(".prose");
-  if (tocHost && prose) {
-    const headings = [...prose.querySelectorAll("h2[id], h3[id]")];
-    if (headings.length >= 3) {
-      const list = document.createElement("ol");
-      list.className = "toc-list";
-      for (const h of headings) {
-        const li = document.createElement("li");
-        li.className = h.tagName === "H3" ? "toc-sub" : "toc-top";
-        const a = document.createElement("a");
-        a.href = `#${h.id}`;
-        a.textContent = (h.textContent || "").trim();
-        li.append(a);
-        list.append(li);
-      }
-      tocHost.append(list);
-      tocHost.hidden = false;
-
-      const links = new Map([...list.querySelectorAll("a")].map((a) => [a.hash.slice(1), a]));
-      const seen = new Set();
-      const observer = new IntersectionObserver(
-        (entries) => {
-          for (const entry of entries) {
-            if (entry.isIntersecting) seen.add(entry.target.id);
-            else seen.delete(entry.target.id);
-          }
-          links.forEach((a, id) => a.classList.toggle("is-current", seen.has(id)));
-        },
-        { rootMargin: "-10% 0px -70% 0px" },
-      );
-      headings.forEach((h) => observer.observe(h));
-    }
   }
 
   // --- catalogue filter ---------------------------------------------------
@@ -239,12 +203,15 @@
 
       results.innerHTML = hits
         .map((d, i) => {
-          const where = [d.shelf, ...d.tags.map((t) => `#${t}`)].filter(Boolean).join("  ·  ");
+          const where = [d.shelf || "General", ...d.tags.map((t) => `#${t}`)].join("  ·  ");
           return `<li class="search__result" role="option" id="search-hit-${i}" aria-selected="${i === 0}">
             <a href="${escapeHtml(d.href)}">
-              <span class="search__title">${highlight(d.title, terms)}</span>
-              ${where ? `<span class="search__where">${escapeHtml(where)}</span>` : ""}
-              <span class="search__snippet">${highlight(snippet(d, terms), terms)}</span>
+              <span class="search__call">${escapeHtml(d.number || "")}</span>
+              <span>
+                <span class="search__title">${highlight(d.title, terms)}</span>
+                ${where ? `<span class="search__where">${escapeHtml(where)}</span>` : ""}
+                <span class="search__snippet">${highlight(snippet(d, terms), terms)}</span>
+              </span>
             </a>
           </li>`;
         })

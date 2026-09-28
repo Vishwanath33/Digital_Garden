@@ -49,14 +49,17 @@ export default {
   stages: {
     manuscript: {
       label: "manuscript",
+      glyph: "○",
       blurb: "A working draft. Thinking out loud; parts of it are probably wrong.",
     },
     proof: {
       label: "proof",
+      glyph: "◐",
       blurb: "Set in type, still being corrected. The argument holds; the edges don't.",
     },
     bound: {
       label: "bound",
+      glyph: "●",
       blurb: "Stable enough to stand behind. Still revised, but no longer provisional.",
     },
   },

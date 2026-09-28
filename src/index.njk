@@ -3,57 +3,44 @@ layout: layouts/base.njk
 home: true
 permalink: /index.html
 ---
-{% bookshelf %}
-
-<hr class="asterism">
-
-<p class="lede">
-  This is a library rather than a blog: a small collection of entries,
-  shelved by subject, cross-referenced, and corrected in place. Nothing here
-  is finished and some of it is wrong. Every entry says how far along it is,
-  from <a href="/notes/epistemic-status/">manuscript to bound</a>, and how
-  much I currently believe it.
-</p>
-<p class="lede">
-  Start anywhere. The <a href="/notes/">catalogue</a> lists everything, the
-  <a href="/tags/">subjects</a> group it, the Explore panel shows the
-  shelves, and the Graph View shows what cites what. Or
-  <a href="#" data-search-open>search the stacks</a> — press <kbd>/</kbd>
-  from any page.
-</p>
-<p class="lede">
-  The figure turning behind the pages is the
-  <a href="/notes/lorenz-attractor/">Lorenz attractor</a>: two states a hair
-  apart that never meet again, yet never leave the same bounded shape. It is
-  the house emblem, and the entry explains why.
-</p>
-
-<section class="home-section">
-  <p class="section-label">Recently revised</p>
-  <ul class="entry-list">
-    {% for note in collections.notes | head(6) %}
-    {% set st = site.stages[note.data.stage] or site.stages.manuscript %}
-    <li class="entry">
-      <div class="entry__head">
-        <h2 class="entry__title"><a href="{{ note.url }}">{{ note.data.title }}</a></h2>
-        <span class="entry__date">{{ (note.data.updated or note.date) | shortDate }}</span>
-      </div>
-      {% if note.data.summary %}<p class="entry__summary">{{ note.data.summary }}</p>{% endif %}
-      <div class="entry__meta">
-        <span class="stage stage--{{ st.label }}">{{ st.label }}</span>
-        {% if note.data.shelf %}<span>{{ note.data.shelf }}</span>{% endif %}
-        {% for tag in note.data.tags | head(3) %}<span>#{{ tag }}</span>{% endfor %}
-      </div>
-    </li>
-    {% endfor %}
-  </ul>
+<section class="title-page">
+  <p class="kicker">A personal library · established 2026</p>
+  <h1 class="display">The Lorenz <em>Library</em></h1>
+  <p class="display-sub">{{ site.tagline }}</p>
 </section>
 
-<section class="home-section">
-  <p class="section-label">Subjects</p>
-  <div class="tag-cloud">
-    {% for entry in collections.tagIndex %}
-    <a class="tag" href="/tags/#{{ entry.tag }}">{{ entry.tag }}<span>{{ entry.count }}</span></a>
+<section class="prose foreword" aria-label="Foreword">
+  <p>
+    This is a library rather than a blog: a small collection of entries,
+    shelved by subject, cross-referenced, and corrected in place. Nothing here
+    is finished and some of it is wrong. Every entry says how far along it is,
+    from <a href="/notes/epistemic-status/">manuscript to bound</a>, and how
+    much I currently believe it.
+  </p>
+  <p>
+    The plate beside the text is the house emblem, and it is running, not
+    drawn. Three trajectories of the Lorenz system leave the same point a
+    hundred-thousandth apart; watch the caption as they part company.
+    <a href="/notes/lorenz-attractor/">Why it hangs here</a> is itself an entry.
+  </p>
+</section>
+
+<section class="contents" aria-labelledby="contents-title">
+  <h2 class="section-head" id="contents-title">Contents</h2>
+  {% for part in collections.parts %}
+  <h3 class="part"><span class="part__num">{{ part.numeral }}</span>{{ part.name }}</h3>
+  <ol class="toc">
+    {% for note in part.notes %}
+    {%- set acc = collections.accession | lookup(note.url) -%}
+    {%- set st = site.stages[note.data.stage] or site.stages.manuscript -%}
+    <li class="toc__item">
+      <a class="toc__link" href="{{ note.url }}">
+        <span class="toc__no">{{ acc.number }}</span>
+        <span class="toc__line"><span class="toc__title">{{ note.data.title }}</span><span class="toc__leader" aria-hidden="true"></span><span class="toc__stage" title="{{ st.blurb }}"><span aria-hidden="true">{{ st.glyph }}</span> {{ st.label }}</span></span>
+      </a>
+      {% if note.data.summary %}<p class="toc__dek">{{ note.data.summary }}</p>{% endif %}
+    </li>
     {% endfor %}
-  </div>
+  </ol>
+  {% endfor %}
 </section>

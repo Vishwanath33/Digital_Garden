@@ -1,11 +1,10 @@
 /**
- * Graph View: the library as a network of entries and subjects.
- *
- * The sidebar shows the current entry and its immediate neighbourhood (the
- * whole library on pages that are not entries); the expand button opens
- * every node in an overlay. A small force simulation lays it out — mutual
- * repulsion, springs along links, a weak pull to the centre — and settles,
- * then stops, so an idle graph costs nothing.
+ * The library as a network of entries and subjects, drawn wherever a
+ * canvas asks for it: `data-graph="local"` for an entry's neighbourhood
+ * (the figure in its end matter), `data-graph="global"` for the whole
+ * collection (the Map). A small force simulation lays it out — mutual
+ * repulsion, springs along links, a weak pull to the centre — then
+ * settles and stops, so an idle graph costs nothing.
  *
  * No dependencies. Colours come from the stylesheet so it follows the theme.
  */
@@ -13,8 +12,8 @@
   "use strict";
 
   const source = document.getElementById("graph-src");
-  const localCanvas = document.querySelector('[data-graph="local"]');
-  if (!source || !localCanvas) return;
+  const canvases = [...document.querySelectorAll("[data-graph]")];
+  if (!source || !canvases.length) return;
 
   const current = document.body.dataset.page || "";
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -30,13 +29,13 @@
     const s = getComputedStyle(document.documentElement);
     const v = (name) => s.getPropertyValue(name).trim();
     palette = {
-      node: v("--ink-faint"),
-      tag: v("--border"),
-      link: v("--border"),
-      label: v("--ink-soft"),
+      node: v("--ink-2"),
+      tag: v("--ink-3"),
+      link: v("--ink-3"),
+      label: v("--ink-2"),
       accent: v("--accent"),
       ink: v("--ink"),
-      bg: v("--panel-solid"),
+      bg: v("--paper-2"),
     };
   };
   readPalette();
@@ -46,6 +45,9 @@
       this.canvas = canvas;
       this.ctx = canvas.getContext("2d");
       this.mode = mode;
+      // The map shows every label, so it spreads out to keep them apart.
+      this.linkLength = mode === "global" ? LINK_LENGTH * 1.6 : LINK_LENGTH;
+      this.repulsion = mode === "global" ? REPULSION * 3 : REPULSION;
 
       // Choose the nodes to show.
       const all = new Map(data.nodes.map((n) => [n.id, n]));
@@ -114,7 +116,7 @@
           let dy = b.y - a.y;
           let d2 = dx * dx + dy * dy;
           if (d2 < 1) { dx = (i - j) * 0.1 || 0.1; dy = 0.1; d2 = 1; }
-          const f = (REPULSION * k) / d2;
+          const f = (this.repulsion * k) / d2;
           const d = Math.sqrt(d2);
           const fx = (dx / d) * f;
           const fy = (dy / d) * f;
@@ -126,7 +128,7 @@
         const dx = b.x - a.x;
         const dy = b.y - a.y;
         const d = Math.sqrt(dx * dx + dy * dy) || 1;
-        const len = a.type === "tag" || b.type === "tag" ? LINK_LENGTH * 0.75 : LINK_LENGTH;
+        const len = a.type === "tag" || b.type === "tag" ? this.linkLength * 0.75 : this.linkLength;
         const f = (d - len) * SPRING * k;
         const fx = (dx / d) * f;
         const fy = (dy / d) * f;
@@ -209,7 +211,7 @@
       ctx.lineWidth = 1;
       for (const l of this.links) {
         const on = lit && lit.has(l.source) && lit.has(l.target) && (l.source === focus || l.target === focus);
-        ctx.globalAlpha = lit ? (on ? 0.95 : 0.18) : 0.75;
+        ctx.globalAlpha = lit ? (on ? 0.95 : 0.12) : 0.45;
         ctx.strokeStyle = on ? palette.accent : palette.link;
         const [x1, y1] = this.toScreen(l.source);
         const [x2, y2] = this.toScreen(l.target);
@@ -248,19 +250,30 @@
         }
       }
 
-      // Labels: on hover in the sidebar; always for entries in the overlay.
-      ctx.font = `${this.mode === "global" ? 12.5 : 11.5}px "Source Sans 3", ui-sans-serif, sans-serif`;
+      // Labels: on hover in an entry's figure; on the map, as many as fit.
+      // Placed in order of importance (the current entry, then entries by
+      // how many links they carry, then subjects); a label that would
+      // collide with one already placed is left for hover to reveal.
+      ctx.font = `italic ${this.mode === "global" ? 15 : 13.5}px Newsreader, Georgia, serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
-      for (const n of this.nodes) {
-        const show =
+      const rank = (n) =>
+        (n === focus ? 3000 : 0) + (n.id === current ? 2000 : 0) + (n.type === "note" ? 1000 : 0) + n.degree;
+      const placed = [];
+      for (const n of [...this.nodes].sort((a, b) => rank(b) - rank(a))) {
+        const wanted =
           (lit && lit.has(n)) ||
-          (!lit && this.mode === "global" && (n.type === "note" || this.zoom > 1.3)) ||
+          (!lit && this.mode === "global") ||
           (!lit && n.id === current && this.mode === "global");
-        if (!show) continue;
+        if (!wanted) continue;
         const [x, y] = this.toScreen(n);
         const r = this.radius(n) * Math.max(0.8, Math.min(this.zoom, 1.6));
         const text = n.title.length > 34 ? `${n.title.slice(0, 32)}…` : n.title;
+        const w = ctx.measureText(text).width;
+        const box = { x0: x - w / 2 - 3, x1: x + w / 2 + 3, y0: y + r + 3, y1: y + r + 22 };
+        const clash = placed.some((b) => box.x0 < b.x1 && box.x1 > b.x0 && box.y0 < b.y1 && box.y1 > b.y0);
+        if (clash && n !== focus) continue;
+        placed.push(box);
         ctx.globalAlpha = lit ? (n === focus ? 1 : 0.85) : 0.72;
         // A knockout behind the label keeps it readable over links.
         ctx.lineWidth = 3;
@@ -361,7 +374,7 @@
         }
       });
 
-      // Wheel zoom only in the overlay: in the sidebar it would steal the
+      // Wheel zoom only on the map: in an entry's figure it would steal the
       // page's scroll.
       if (this.mode === "global") {
         c.addEventListener(
@@ -391,20 +404,15 @@
 
   // --- wiring -------------------------------------------------------------
   const views = [];
-  let data = null;
 
-  const load = () =>
-    fetch(source.href)
-      .then((r) => r.json())
-      .then((d) => (data = d));
-
-  load()
-    .then(() => {
-      views.push(new GraphView(localCanvas, data, { mode: "local" }));
+  fetch(source.href)
+    .then((r) => r.json())
+    .then((data) => {
+      for (const canvas of canvases) {
+        views.push(new GraphView(canvas, data, { mode: canvas.dataset.graph === "global" ? "global" : "local" }));
+      }
     })
-    .catch(() => {
-      localCanvas.closest(".graph-group")?.setAttribute("hidden", "");
-    });
+    .catch(() => canvases.forEach((c) => c.closest("figure")?.setAttribute("hidden", "")));
 
   document.addEventListener("themechange", () => {
     // Custom properties settle after the attribute flips; read next frame.
@@ -414,47 +422,9 @@
     });
   });
 
-  const overlay = document.querySelector("[data-graph-overlay]");
-  const globalCanvas = document.querySelector('[data-graph="global"]');
-  let globalView = null;
-  let opener = null;
-
-  const openGraph = () => {
-    if (!overlay || !data) return;
-    opener = document.activeElement;
-    overlay.hidden = false;
-    document.body.style.overflow = "hidden";
-    if (!globalView) {
-      globalView = new GraphView(globalCanvas, data, { mode: "global" });
-      views.push(globalView);
-    } else {
-      globalView.resize();
-      globalView.fit();
-      globalView.redraw();
-    }
-    overlay.querySelector("[data-graph-close]")?.focus();
-  };
-
-  const closeGraph = () => {
-    if (!overlay || overlay.hidden) return;
-    overlay.hidden = true;
-    document.body.style.overflow = "";
-    opener?.focus?.();
-  };
-
-  document.querySelector("[data-graph-expand]")?.addEventListener("click", openGraph);
-  overlay?.querySelector("[data-graph-close]")?.addEventListener("click", closeGraph);
-  overlay?.addEventListener("mousedown", (e) => {
-    if (e.target === overlay) closeGraph();
-  });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeGraph();
-  });
-
   window.__graph = {
-    get local() { return views[0]; },
-    get global() { return globalView; },
-    open: openGraph,
-    close: closeGraph,
+    get views() { return views; },
+    get local() { return views.find((v) => v.mode === "local"); },
+    get global() { return views.find((v) => v.mode === "global"); },
   };
 })();

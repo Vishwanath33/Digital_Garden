@@ -1,5 +1,6 @@
 ---
 layout: layouts/page.njk
+kicker: About
 title: About
 summary: Who keeps this library, and what it is for.
 permalink: /about/index.html
@@ -15,9 +16,9 @@ superseded, and each is labelled with how far along it is and how much I
 currently believe it. The labels are [documented](/notes/epistemic-status/),
 and they move, downward as often as up.
 
-The figure turning behind every page is the Lorenz attractor, integrated
-live rather than drawn from a picture. Three trajectories start a
-hundred-thousandth of a unit apart and end up unrelated.
+The plate beside every page is the Lorenz attractor, running live rather
+than drawn from a picture. Three trajectories start a hundred-thousandth of
+a unit apart and end up unrelated; the caption measures how fast.
 [Why that is the emblem](/notes/lorenz-attractor/) is itself an entry.
 
 ## Corrections

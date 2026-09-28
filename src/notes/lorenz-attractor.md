@@ -1,5 +1,5 @@
 ---
-title: The Lorenz attractor, and why it is the wallpaper
+title: The Lorenz attractor, and why it hangs here
 summary: A weather model too small to forecast anything, which accidentally explained why forecasting fails.
 created: 2026-03-04
 updated: 2026-09-21
@@ -64,7 +64,7 @@ took the rest of the field a decade to absorb it.
 
 ## The shape
 
-Plot the trajectory and you get the figure turning behind this page: two
+Plot the trajectory and you get the figure on the plate beside this page: two
 lobes, a surface that looks like it has area but has measured volume zero,
 a fractal dimension around 2.06. Orbits on it never cross — they cannot,
 since the system is deterministic and crossing would mean two futures from
@@ -72,11 +72,14 @@ one state — so the apparent surface is really infinitely many sheets, packed
 arbitrarily close.
 
 {% aside "On the picture" %}
-The background here integrates the real system with fourth-order Runge–Kutta
-at a fixed step, so the shape is correct rather than decorative. Three
-trajectories run at once, seeded a hundred-thousandth apart in *z*. They
-overlap for the first minute or so of viewing and are unrelated after that.
-That is the entire argument of this entry, rendered continuously.
+The plate beside this page integrates the real system with fourth-order
+Runge–Kutta at a fixed step, so the shape is correct rather than decorative.
+Three trajectories run at once, seeded a hundred-thousandth apart in *z*.
+For the first ten seconds or so they agree so closely that they draw a
+single white line; then they come apart into three colours, and the
+separation in the caption climbs a straight line on its logarithmic
+sparkline. That is the entire argument of this entry, running continuously.
+*Re-run* starts it again from a new point on the attractor.
 {% endaside %}
 
 That it was a *strange attractor* — attracting, but not to a point or a
@@ -85,7 +88,7 @@ particular set really is one was not proved until Warwick Tucker did it in
 1999, with a computer-assisted argument. Thirty-six years between the picture
 and the proof.
 
-## Why it is behind the text
+## Why it hangs here
 
 Because it is an honest picture of what this place is for.
 
