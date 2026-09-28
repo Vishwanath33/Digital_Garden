@@ -241,6 +241,7 @@ const canvasPainted = (p, sel) =>
   const nav = (await p.locator(".running-head__nav a").allTextContents()).map((t) => t.trim());
   check(nav[0] === "Home" && !nav.some((t) => /contents|catalogue/i.test(t)), `running head starts with Home, no Catalogue (${nav.join(", ")})`);
   check(await p.locator('.running-head__nav a[href$="/"]').first().getAttribute("aria-current") === "page", "Home is marked current on the home page");
+  check((await p.locator("#contents-title").textContent()).trim() === "Home", "the list on the home page is headed Home");
   check((await p.request.get(`${BASE}notes/`)).status() === 404, "there is no catalogue page");
 
   await p.goto(`${BASE}tags/`, { waitUntil: "networkidle" });
