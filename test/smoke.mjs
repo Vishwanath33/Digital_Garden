@@ -46,6 +46,10 @@ await p.waitForTimeout(1200);
 check(missing.length === 0, `every asset the page requests resolves${missing.length ? " — " + missing.join(", ") : ""}`);
 check(await p.evaluate(() => getComputedStyle(document.body).fontFamily.includes("Iowan")),
   "stylesheet actually applied (serif stack in effect)");
+if (!site.sourcePublic) {
+  const repoLinks = await p.locator(`a[href^="${site.repo}"]`).count();
+  check(repoLinks === 0, `no links into the private repository (${repoLinks} found)`);
+}
 check(await p.locator(".sidenote").first().isVisible(), "sidenote visible in margin on desktop");
 check(!(await p.locator(".footnotes").first().isVisible().catch(() => false)), "redundant endnote list hidden when sidenotes active");
 const sn = await p.locator(".sidenote").first().boundingBox();

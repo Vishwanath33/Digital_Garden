@@ -427,6 +427,7 @@ code, kbd, samp {
   margin-bottom: 0.35rem;
 }
 .inline-aside > p:first-of-type { margin-top: 0; }
+.inline-aside p + p { margin-top: 0.7em; }
 
 /* --- sidenotes ---------------------------------------------------------- */
 .sidenote-toggle { display: none; }

@@ -23,13 +23,19 @@ is itself a note.
 
 ## Corrections
 
+{% if site.sourcePublic -%}
 If something here is wrong, I want to know, and the fastest route is a
 [GitHub issue]({{ site.repo }}/issues) — every note has a *History & source*
 link that points at the file that produced it. Corrections that change a
 note's conclusion get noted in the note.
+{%- else -%}
+If something here is wrong, I want to know — [email me](mailto:{{ site.author.email }})
+with the note's title. Corrections that change a note's conclusion get noted
+in the note.
+{%- endif %}
 
 ## Elsewhere
 
-- Source: [{{ site.repo | replace("https://github.com/", "github.com/") }}]({{ site.repo }})
-- Feed: [Atom](/feed.xml) — publishes on planting *and* on tending
+{% if site.sourcePublic %}- Source: [{{ site.repo | replace("https://github.com/", "github.com/") }}]({{ site.repo }})
+{% endif %}- Feed: [Atom](/feed.xml) — publishes on planting *and* on tending
 - Email: <{{ site.author.email }}>

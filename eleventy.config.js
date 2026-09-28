@@ -20,6 +20,9 @@ function expandWikiLinks(content) {
 }
 
 export default function (eleventyConfig) {
+  // Captured so paired shortcodes can render Markdown in their bodies; an
+  // <aside> opens an HTML block, inside which markdown-it would not look.
+  let md;
   eleventyConfig.setLiquidOptions({ jsTruthy: true });
   eleventyConfig.addPlugin(EleventyHtmlBasePlugin);
 
@@ -29,7 +32,8 @@ export default function (eleventyConfig) {
   eleventyConfig.addWatchTarget("src/assets/");
 
   // --- markdown -----------------------------------------------------------
-  eleventyConfig.amendLibrary("md", (md) => {
+  eleventyConfig.amendLibrary("md", (lib) => {
+    md = lib;
     md.use(markdownItFootnote)
       .use(markdownItAttrs)
       .use(markdownItAnchor, {
@@ -199,11 +203,11 @@ export default function (eleventyConfig) {
 
   // --- shortcodes ---------------------------------------------------------
   eleventyConfig.addPairedShortcode("aside", (content, label = "") =>
-    `<aside class="inline-aside">${label ? `<span class="aside-label">${label}</span>` : ""}${content}</aside>`,
+    `<aside class="inline-aside">${label ? `<span class="aside-label">${label}</span>` : ""}${md.render(content.trim())}</aside>`,
   );
 
   eleventyConfig.addPairedShortcode("epigraph", (content, source = "") =>
-    `<blockquote class="epigraph">${content}${source ? `<cite>${source}</cite>` : ""}</blockquote>`,
+    `<blockquote class="epigraph">${md.render(content.trim())}${source ? `<cite>${source}</cite>` : ""}</blockquote>`,
   );
 
   // --- feed ---------------------------------------------------------------

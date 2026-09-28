@@ -77,10 +77,12 @@ layout: layouts/base.njk
   </nav>
   {% endif %}
 
+  {% if site.sourcePublic %}
   <nav class="backlinks" aria-label="Note actions">
     <p class="section-label">This note</p>
     <ul>
       <li><a href="{{ site.repo }}/blob/{{ site.repoBranch }}/src/notes/{{ page.fileSlug }}.md">History &amp; source</a></li>
     </ul>
   </nav>
+  {% endif %}
 </article>

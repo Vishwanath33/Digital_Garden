@@ -2,7 +2,7 @@
 
 A digital garden — notes organised by subject, revised in place, each labelled
 with how mature it is and how much its author currently believes it. Built
-with [Eleventy](https://www.11ty.dev/), deployed to GitHub Pages, with a live
+with [Eleventy](https://www.11ty.dev/), hosted free on Cloudflare Pages, with a live
 Lorenz attractor integrated behind every page.
 
 ```
@@ -81,8 +81,8 @@ Does the flap of a butterfly's wings in Brazil set off a tornado in Texas?
 ## Making it yours
 
 Almost everything you'd want to change lives in **`src/_data/site.js`**: the
-title, tagline, your name, the repository link, the custom domain, and the
-growth-stage vocabulary.
+title, tagline, your name, the host address, the custom domain, whether the
+source is public, and the growth-stage vocabulary.
 
 Colours, type and spacing are CSS custom properties at the top of
 `src/assets/css/garden.css` — `--paper`, `--ink`, `--accent`, `--measure` and
@@ -128,71 +128,75 @@ column is the `mask-image` on `#lorenz` in the stylesheet.
 
 ---
 
-## Deploying
+## Deploying — free, from a private repository
 
-A push triggers `.github/workflows/deploy.yml`, which builds and publishes to
-GitHub Pages. One-time setup:
+GitHub Pages is free only for public repositories, so this site is hosted on
+**Cloudflare Pages**, which builds from private repositories at no cost,
+includes HTTPS, and handles custom domains. Cloudflare runs the build itself,
+so there is no deploy workflow in this repository.
 
-1. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
-   This one is required and cannot be automated — the workflow's token is not
-   allowed to enable Pages, and the run fails at `configure-pages` until the
-   setting is made.
-2. Re-run the workflow (**Actions → Build and deploy → Run workflow**, or just
-   push again). It publishes to `https://vishwanath33.github.io/Digital_Garden`.
+One-time setup (about five minutes):
 
-> The repository was created empty, so the first push became the default
-> branch rather than `main`. The workflow currently watches both that branch
-> and `main`; rename the branch to `main` in **Settings → Branches** (or push
-> a `main`) and then drop the extra entry from the workflow's `branches:` list.
+1. Create a free account at [dash.cloudflare.com](https://dash.cloudflare.com/sign-up).
+2. **Workers & Pages → Create → Pages → Connect to Git.** Authorise GitHub and
+   grant access to just this repository — private repositories are fine.
+3. Configure the build:
+
+   | Setting | Value |
+   | --- | --- |
+   | Project name | `lorenz-garden` (becomes `lorenz-garden.pages.dev`) |
+   | Production branch | `claude/gifted-knuth-6inz5y` — or `main` once renamed |
+   | Framework preset | None |
+   | Build command | `npm run build` |
+   | Build output directory | `_site` |
+
+   Node 22 is pinned by `.node-version`. If a build ever picks an older Node,
+   add an environment variable `NODE_VERSION` = `22`.
+
+4. **Save and Deploy.** From then on every push rebuilds and publishes, and
+   Cloudflare shows the build status on each commit in GitHub.
+
+5. If Cloudflare gave you a different address (e.g. `lorenz-garden-4xk.pages.dev`
+   because the name was taken), paste it into `hostUrl` in
+   `src/_data/site.js`. Internal links work either way; this only fixes the
+   absolute URLs in the feed, sitemap and link previews.
+
+> Cloudflare's dashboard labels move around. If a menu name above doesn't
+> match, the thing you are looking for is "create a Pages project from a Git
+> repository".
 
 ### A custom domain
 
-Buy the name from any registrar — [Porkbun](https://porkbun.com),
-[Namecheap](https://www.namecheap.com) and
-[Cloudflare Registrar](https://www.cloudflare.com/products/registrar/) are the
-usual recommendations, and Cloudflare sells at cost. A `.com` runs about
-$10–15/year; `.garden`, `.ink` and `.page` are in a similar range and suit
-this better.
+Buying through **Cloudflare Registrar** (dashboard → Domain Registration) is
+simplest because the DNS is then set up for you, and it sells at cost: a
+`.com` is about $10/year. Then:
 
-Then:
-
-1. Set it in `src/_data/site.js`:
+1. In the Pages project: **Custom domains → Set up a custom domain**, and enter
+   it. On a Cloudflare-registered domain the records are created
+   automatically; HTTPS follows within minutes.
+2. Set it in `src/_data/site.js` and push:
 
    ```js
    domain: "your-domain.example",
    ```
 
-   The build writes `_site/CNAME` from that value, which is how GitHub Pages
-   learns about it. Canonical URLs, the sitemap and the feed all follow the
-   same setting.
+   Canonical URLs, the sitemap and the feed all follow that one value.
 
-2. At your registrar, point the domain at GitHub Pages. For an **apex** domain
-   (`your-domain.example`), four `A` records and four `AAAA` records:
+A domain bought elsewhere (Porkbun, Namecheap…) works too: Cloudflare shows
+the CNAME record to add at your registrar when you enter the domain.
 
-   ```
-   A     @   185.199.108.153
-   A     @   185.199.109.153
-   A     @   185.199.110.153
-   A     @   185.199.111.153
-   AAAA  @   2606:50c0:8000::153
-   AAAA  @   2606:50c0:8001::153
-   AAAA  @   2606:50c0:8002::153
-   AAAA  @   2606:50c0:8003::153
-   ```
+### The source links
 
-   For a **subdomain** (`garden.your-domain.example`), one record instead:
+While the repository is private, readers can't open it, so the
+*History & source* links, the footer's *source* link and the GitHub-issue
+route on the about page are left out rather than left broken
+(`sourcePublic: false` in `site.js`). If you make the repository public, set
+it to `true` and they come back.
 
-   ```
-   CNAME  garden   vishwanath33.github.io.
-   ```
-
-   > These addresses are stable but are GitHub's to change. Confirm them
-   > against the values shown in **Settings → Pages** after you enter the
-   > domain there, which are authoritative for your repository.
-
-3. **Settings → Pages → Custom domain**, enter the domain, save, and tick
-   **Enforce HTTPS** once the certificate is issued (usually minutes, up to
-   24 hours).
+Making it public also makes free **GitHub Pages** an option again. In that
+case set `hostUrl` to `https://vishwanath33.github.io/Digital_Garden` (the
+path prefix follows automatically) and restore the Pages workflow from this
+repository's history (`git show 4d0d007:.github/workflows/deploy.yml`).
 
 ---
 

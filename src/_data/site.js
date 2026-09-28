@@ -12,32 +12,39 @@ export default {
   },
 
   // Set `domain` to your custom domain once you own one (e.g. "lorenz.garden").
-  // Leave it null to serve from the default GitHub Pages URL.
+  // Leave it null to serve from the free host address below.
   domain: null,
 
-  // Where GitHub Pages serves this repository when there is no custom domain.
-  // Project pages live under /<repo>/, which is why pathPrefix exists below.
-  githubUser: "vishwanath33",
-  githubRepoPath: "/Digital_Garden/",
+  // The free address the host gives you. Cloudflare Pages uses
+  // https://<project-name>.pages.dev — paste the real one here after the
+  // first deploy. Only absolute URLs (canonical, feed, sitemap) use it;
+  // internal links work regardless.
+  hostUrl: "https://lorenz-garden.pages.dev",
 
-  // Repository, for "edit this page" and colophon links.
+  // Repository, for "history & source" links.
   repo: "https://github.com/Vishwanath33/Digital_Garden",
   // HEAD resolves to whatever the default branch is called.
   repoBranch: "HEAD",
 
-  get origin() {
-    return this.domain ? `https://${this.domain}` : `https://${this.githubUser}.github.io`;
-  },
-
-  // A custom domain serves from the root; a project page serves from /<repo>/.
-  // Eleventy rewrites every internal link with this, so nothing else has to
-  // know which of the two is in play.
-  get pathPrefix() {
-    return this.domain ? "/" : this.githubRepoPath;
-  },
+  // Readers cannot open a private repository, so while this is false the
+  // source, history and issue links are left out rather than left broken.
+  // Set it to true if you ever make the repository public.
+  sourcePublic: false,
 
   get url() {
-    return (this.origin + this.pathPrefix).replace(/\/$/, "");
+    return (this.domain ? `https://${this.domain}` : this.hostUrl).replace(/\/$/, "");
+  },
+
+  get origin() {
+    return new URL(this.url).origin;
+  },
+
+  // "/" at a domain root; "/<repo>/" if ever served from a GitHub project
+  // page. Eleventy rewrites every internal link with it, so nothing else
+  // has to know which is in play.
+  get pathPrefix() {
+    const path = new URL(this.url).pathname.replace(/\/?$/, "/");
+    return path;
   },
 
   // Growth stages, in the gardening idiom: a note's maturity, not its length.

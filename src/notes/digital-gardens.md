@@ -37,10 +37,18 @@ A garden inverts the defaults:
 If everything is revised in place, the reader cannot tell what changed, and a
 garden becomes a way to quietly be right in retrospect.
 
+{% if site.sourcePublic -%}
 This is a real problem and the answer is mechanical rather than moral: the
 whole site is a git repository, every note has a *History & source* link at
 the bottom, and every edit is a public commit. I cannot silently revise. I can
 only revise.
+{%- else -%}
+This is a real problem, and for now my answer is only partial. Every note
+shows when it was last tended, and the feed publishes on every tending, so a
+change cannot happen unannounced. What a reader cannot yet see is the
+difference itself: the history lives in a git repository that is not public.
+Opening it is the complete answer, and the one I expect to get to.
+{%- endif %}
 
 {% aside "Cost" %}
 The honest downside: gardens are much worse than blogs at telling you
