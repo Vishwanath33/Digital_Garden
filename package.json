@@ -1,7 +1,7 @@
 {
   "name": "digital-garden",
   "version": "1.0.0",
-  "description": "A digital garden \u2014 notes that grow in public.",
+  "description": "A digital garden — notes that grow in public.",
   "type": "module",
   "scripts": {
     "dev": "eleventy --serve --quiet",
@@ -13,6 +13,8 @@
   "dependencies": {
     "@11ty/eleventy": "^3.1.6",
     "@11ty/eleventy-plugin-rss": "^2.0.4",
+    "@fontsource-variable/lora": "^5.3.0",
+    "@fontsource-variable/source-sans-3": "^5.3.0",
     "luxon": "^3.7.2",
     "markdown-it-anchor": "^9.2.1",
     "markdown-it-attrs": "^4.5.0",

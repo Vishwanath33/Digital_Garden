@@ -1,9 +1,10 @@
 ---
 title: The Lorenz attractor, and why it is the wallpaper
 summary: A weather model too small to forecast anything, which accidentally explained why forecasting fails.
-planted: 2026-03-04
+created: 2026-03-04
 updated: 2026-09-21
-growth: evergreen
+stage: bound
+shelf: Chaos
 certainty: high
 importance: 7
 tags: [chaos, mathematics, models]
@@ -75,7 +76,7 @@ The background here integrates the real system with fourth-order Runge–Kutta
 at a fixed step, so the shape is correct rather than decorative. Three
 trajectories run at once, seeded a hundred-thousandth apart in *z*. They
 overlap for the first minute or so of viewing and are unrelated after that.
-That is the entire argument of this note, rendered continuously.
+That is the entire argument of this entry, rendered continuously.
 {% endaside %}
 
 That it was a *strange attractor* — attracting, but not to a point or a
@@ -88,16 +89,16 @@ and the proof.
 
 Because it is an honest picture of what this place is for.
 
-Notes here get revised. A revision is a small perturbation — a sentence, a
+Entries here get revised. A revision is a small perturbation — a sentence, a
 number, a source I had not read. Most of them change nothing. Some of them
 move the whole argument somewhere I could not have predicted from where it
 started, and there is no way to tell in advance which kind a given edit is.
 Writing in public, with the revision history exposed, is a way of admitting
-that. See [[epistemic-status|epistemic status]] for how I try to label the state of a note
+that. See [[epistemic-status|epistemic status]] for how I try to label the state of an entry
 without pretending I can forecast where it ends up, and
 [[sensitive-dependence|sensitive dependence]] for where this stops being a metaphor and starts
 being a limit on knowledge.
 
 It is also bounded, which is the consoling half. The trajectory wanders
-forever and never leaves the attractor. A garden can be endlessly revised and
-still be about something.
+forever and never leaves the attractor. A library can be endlessly revised
+and still be about something.

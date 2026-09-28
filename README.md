@@ -1,9 +1,11 @@
-# The Lorenz Garden
+# The Lorenz Library
 
-A digital garden — notes organised by subject, revised in place, each labelled
-with how mature it is and how much its author currently believes it. Built
-with [Eleventy](https://www.11ty.dev/), deployed to GitHub Pages, with a live
-Lorenz attractor integrated behind every page.
+A personal library of linked notes: entries shelved by subject,
+cross-referenced, and corrected in place, each labelled with how finished it
+is and how much its author currently believes it. Three columns in the
+manner of [Quartz](https://quartz.jzhao.xyz/): a live graph, the page, and
+the shelves, over a Lorenz attractor integrated in real time. Built with
+[Eleventy](https://www.11ty.dev/) and deployed to GitHub Pages.
 
 ```
 npm install
@@ -14,49 +16,52 @@ npm test        # builds, then runs a browser smoke test
 
 ---
 
-## Planting a note
+## Adding an entry
 
-Add a Markdown file to `src/notes/`. The filename becomes the URL, so
+Add a Markdown file to `src/notes/`. The filename becomes the address, so
 `src/notes/why-maps-lie.md` is served at `/notes/why-maps-lie/`.
 
 ```markdown
 ---
 title: Why maps lie
-summary: One sentence, shown in listings and in search results.
-planted: 2026-09-28
+summary: One sentence, shown in listings, search results and link previews.
+created: 2026-09-28
 updated: 2026-09-28
-growth: seedling        # seedling | budding | evergreen
+stage: manuscript       # manuscript | proof | bound
+shelf: Cartography      # where it sits in Explore; nest with "Maps/Projections"
 certainty: possible     # certain | high | likely | possible | unlikely | speculative
 importance: 5           # 1–10
-tags: [cartography, epistemics]
+tags: [cartography, epistemics]   # subjects: also nodes in the graph
 ---
 
-Your first paragraph gets a dropcap.
+The first paragraph gets a drop capital.
 ```
 
-Only `title` and `planted` are strictly required. `draft: true` keeps a note
-out of the build entirely.
+Only `title` and `created` are strictly required. An entry with no `shelf`
+sits at the top level of Explore. `draft: true` keeps an entry out of the
+build entirely.
 
-The vocabulary for `growth` and `certainty` is explained — and is meant to be
-changed to suit you — in `/notes/epistemic-status/`.
+The stage and certainty vocabulary is explained, and meant to be changed to
+suit you, in `/notes/epistemic-status/`.
 
 ### Linking
 
-Wiki-style links resolve to other notes:
+Wiki-style links resolve to other entries:
 
 ```markdown
-[[why-maps-lie]]                      → linked by its slug
+[[why-maps-lie]]                      → linked by its filename
 [[why-maps-lie|maps are arguments]]   → with your own link text
 ```
 
-Every note automatically grows a **Linked from** section listing the notes
-that point at it. Backlinks are computed at build time by parsing the
-Markdown, so they are never out of date and never hand-maintained.
+Links feed three things automatically, all computed at build time from the
+Markdown: the **Backlinks** panel on each entry, the edges of the **Graph
+View**, and a `brokenLinks` collection listing links to entries that don't
+exist yet.
 
 ### Sidenotes
 
-Ordinary Markdown footnotes are promoted into the right margin on wide
-screens, and fold out inline when tapped on narrow ones:
+Ordinary Markdown footnotes become margin notes when the page is wide
+enough, and fold out inline when tapped on narrower screens:
 
 ```markdown
 The claim in the main text.[^why]
@@ -68,7 +73,7 @@ The claim in the main text.[^why]
 
 ```markdown
 {% aside "Where I am least sure" %}
-A boxed caveat, set apart from the argument.
+A boxed caveat, set apart from the argument. *Markdown* works inside.
 {% endaside %}
 
 {% epigraph "Edward Lorenz, 1972" %}
@@ -78,17 +83,32 @@ Does the flap of a butterfly's wings in Brazil set off a tornado in Texas?
 
 ---
 
+## Finding things
+
+- **Graph View** (left): the current entry and everything it links to or
+  shares a subject with. The button in its corner opens the whole library;
+  drag to move, scroll to zoom, click a node to open it.
+- **Explore** (right): the shelves, from each entry's `shelf`.
+- **Search**: press <kbd>/</kbd> or <kbd>Ctrl</kbd>/<kbd>⌘</kbd> <kbd>K</kbd>
+  anywhere. It runs in the browser over `search.json`, built with the site.
+- **Catalogue** (`/notes/`) and **Subjects** (`/tags/`) list everything.
+
+---
+
 ## Making it yours
 
 Almost everything you'd want to change lives in **`src/_data/site.js`**: the
 title, tagline, your name, the host address, the custom domain, whether the
-source is public, and the growth-stage vocabulary.
+source is public, and the stage vocabulary.
 
 Colours, type and spacing are CSS custom properties at the top of
-`src/assets/css/garden.css` — `--paper`, `--ink`, `--accent`, `--measure` and
-friends, with a dark-mode block immediately below. The attractor reads
-`--lorenz-ink` and `--lorenz-accent` from the same place, so it follows the
-theme rather than carrying its own palette.
+`src/assets/css/library.css`, with the dark theme immediately below. The
+attractor, the graph and the engraving all read their colours from the same
+place, so they follow the theme.
+
+The engraved bookshelf on the home page is generated by `lib/bookshelf.js`
+from a fixed seed. Change `seed` in the `bookshelf()` call to get a
+different shelf.
 
 ---
 
@@ -104,27 +124,19 @@ dz/dt = xy − βz       β = 8/3
 
 with fourth-order Runge–Kutta at a fixed step, so the figure is the actual
 attractor rather than a drawing of one. Three trajectories start 10⁻⁵ apart
-and separate on screen. No dependencies, ~230 lines.
+and separate on screen.
 
-It is built to stay out of the way:
+It is built to stay out of the way. The view rocks either side of face-on
+rather than revolving, which would pass through an edge-on sliver. It draws
+at 1×, samples its own frame times and shortens its trails (then stops) if
+it starts costing frames. It renders one still frame under
+`prefers-reduced-motion`, pauses on a hidden tab, and the *Attractor* switch
+in the bottom corner pauses it by hand.
 
-- **Face-on view.** On the attractor `x ≈ y`, so the figure is nearly planar.
-  The view rocks ±24° either side of face-on rather than making full
-  revolutions, which would swing through an edge-on angle showing a sliver.
-- **1× backing store.** Faint wallpaper gains nothing from a retina canvas and
-  a 2× one quadruples rasterisation cost.
-- **Adaptive.** Frame times are sampled; if they slip past ~26 ms the trails
-  shorten, and past ~45 ms it stops and leaves a still frame. A decoration
-  should never make the page feel slow.
-- **`prefers-reduced-motion`.** Renders one still frame and never animates.
-- **Pauses** when the tab is hidden, and can be switched off with the ❉
-  control in the header.
-
-Knobs worth turning, all near the top of the file: `STEPS_PER_FRAME` (how fast
-the pen travels), `TRAIL` (how much history stays on screen), `SWING` and
-`RATE` (the rocking), and the `0.30` alpha coefficient in `drawTrajectory`
-(how present the whole thing is). The mask that fades it through the reading
-column is the `mask-image` on `#lorenz` in the stylesheet.
+Knobs, near the top of the file: `STEPS_PER_FRAME` (pen speed), `TRAIL`
+(history on screen), `SWING` and `RATE` (the rocking), the scale in
+`resize()` (how far the lobes reach past the centre card), and the `0.48`
+alpha coefficient in `drawTrajectory` (how present the whole thing is).
 
 ---
 
@@ -175,10 +187,10 @@ good. Then:
    AAAA  @   2606:50c0:8003::153
    ```
 
-   For a **subdomain** (`garden.your-domain.example`), one record instead:
+   For a **subdomain** (`library.your-domain.example`), one record instead:
 
    ```
-   CNAME  garden   vishwanath33.github.io.
+   CNAME  library  vishwanath33.github.io.
    ```
 
    > These addresses have been stable for years, but GitHub can change them.
@@ -203,15 +215,19 @@ output directory to `_site`, and put its `*.pages.dev` address in `hostUrl`.
 
 ```
 src/
-  _data/site.js          ← title, domain, author, growth vocabulary
-  _includes/layouts/     ← base, note, page
-  assets/css/garden.css  ← the whole visual system
-  assets/js/lorenz.js    ← the attractor
-  assets/js/garden.js    ← sidenotes, theme, TOC, filtering
-  notes/*.md             ← the garden
+  _data/site.js            ← title, domain, author, stage vocabulary
+  _includes/layouts/       ← base (three columns), note, page
+  _includes/partials/      ← icons, the Explore tree
+  assets/css/library.css   ← the whole visual system
+  assets/js/lorenz.js      ← the attractor
+  assets/js/graph.js       ← Graph View
+  assets/js/library.js     ← search, sidenotes, theme, contents, filter
+  notes/*.md               ← the library
   index.njk  notes.njk  tags.njk  about.md  colophon.md
-eleventy.config.js       ← wiki links, backlinks, filters, feed, CNAME
-test/smoke.mjs           ← browser checks for the interactive pieces
+  graph.njk  search.njk    ← graph.json and search.json
+lib/bookshelf.js           ← the engraved banner
+eleventy.config.js         ← wiki links, backlinks, graph, shelves, search, feed
+test/smoke.mjs             ← browser checks for the interactive pieces
 ```
 
 ## Licence

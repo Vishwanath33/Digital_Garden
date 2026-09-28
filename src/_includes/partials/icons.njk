@@ -1,0 +1,17 @@
+{%- macro icon(name) -%}
+{%- if name == "moon" -%}
+<svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a7 7 0 0 0 10.7 10.7z"/></svg>
+{%- elif name == "sun" -%}
+<svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>
+{%- elif name == "search" -%}
+<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.4 15.4 21 21"/></svg>
+{%- elif name == "graph" -%}
+<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2.2"/><circle cx="4.5" cy="4.5" r="1.6"/><circle cx="19.5" cy="4.5" r="1.6"/><circle cx="4.5" cy="19.5" r="1.6"/><circle cx="19.5" cy="19.5" r="1.6"/><path d="M5.7 5.7l4.7 4.7M18.3 5.7l-4.7 4.7M5.7 18.3l4.7-4.7M18.3 18.3l-4.7-4.7"/></svg>
+{%- elif name == "chevron" -%}
+<svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.5 15.5 12 9 18.5"/></svg>
+{%- elif name == "chevron-down" -%}
+<svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 9 12 15.5 18.5 9"/></svg>
+{%- elif name == "close" -%}
+<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+{%- endif -%}
+{%- endmacro -%}

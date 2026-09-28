@@ -1,9 +1,10 @@
 ---
 title: Sensitive dependence is not an excuse
 summary: Chaos limits prediction, but the limit is specific and quantifiable. Invoking it to avoid making forecasts is usually a bluff.
-planted: 2026-05-19
+created: 2026-05-19
 updated: 2026-09-11
-growth: budding
+stage: proof
+shelf: Chaos
 certainty: likely
 importance: 8
 tags: [chaos, forecasting, epistemics]

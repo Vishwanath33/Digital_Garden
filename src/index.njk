@@ -3,21 +3,36 @@ layout: layouts/base.njk
 home: true
 permalink: /index.html
 ---
-<section class="hero">
-  <h1 class="hero__title">Notes that grow in <em>public</em>.</h1>
-  <p class="lede">
-    This is a garden, not a blog. Nothing here is finished; some of it is wrong.
-    Entries are planted small, revised when I learn something, and marked with
-    how much I currently trust them. The attractor turning behind the text is
-    the reason for the name — two nearby states, one small perturbation, and
-    the trajectories never meet again. Ideas behave about the same way.
-  </p>
-</section>
+{% bookshelf %}
 
-<section>
-  <p class="section-label">Recently tended</p>
+<hr class="asterism">
+
+<p class="lede">
+  This is a library rather than a blog: a small collection of entries,
+  shelved by subject, cross-referenced, and corrected in place. Nothing here
+  is finished and some of it is wrong. Every entry says how far along it is,
+  from <a href="/notes/epistemic-status/">manuscript to bound</a>, and how
+  much I currently believe it.
+</p>
+<p class="lede">
+  Start anywhere. The <a href="/notes/">catalogue</a> lists everything, the
+  <a href="/tags/">subjects</a> group it, the Explore panel shows the
+  shelves, and the Graph View shows what cites what. Or
+  <a href="#" data-search-open>search the stacks</a> — press <kbd>/</kbd>
+  from any page.
+</p>
+<p class="lede">
+  The figure turning behind the pages is the
+  <a href="/notes/lorenz-attractor/">Lorenz attractor</a>: two states a hair
+  apart that never meet again, yet never leave the same bounded shape. It is
+  the house emblem, and the entry explains why.
+</p>
+
+<section class="home-section">
+  <p class="section-label">Recently revised</p>
   <ul class="entry-list">
-    {% for note in collections.notes | head(8) %}
+    {% for note in collections.notes | head(6) %}
+    {% set st = site.stages[note.data.stage] or site.stages.manuscript %}
     <li class="entry">
       <div class="entry__head">
         <h2 class="entry__title"><a href="{{ note.url }}">{{ note.data.title }}</a></h2>
@@ -25,23 +40,20 @@ permalink: /index.html
       </div>
       {% if note.data.summary %}<p class="entry__summary">{{ note.data.summary }}</p>{% endif %}
       <div class="entry__meta">
-        {% set stage = site.stages[note.data.growth] or site.stages.seedling %}
-        <span class="stage stage--{{ stage.label }}">{{ stage.label }}</span>
+        <span class="stage stage--{{ st.label }}">{{ st.label }}</span>
+        {% if note.data.shelf %}<span>{{ note.data.shelf }}</span>{% endif %}
         {% for tag in note.data.tags | head(3) %}<span>#{{ tag }}</span>{% endfor %}
       </div>
     </li>
     {% endfor %}
   </ul>
-  <p class="filter-hint" style="margin-top:1rem">
-    <a href="/notes/">All {{ collections.notes.length }} notes →</a>
-  </p>
 </section>
 
-<section style="margin-top:3.5rem">
-  <p class="section-label">What grows here</p>
+<section class="home-section">
+  <p class="section-label">Subjects</p>
   <div class="tag-cloud">
     {% for entry in collections.tagIndex %}
-    <a class="tag" href="/tags/#{{ entry.tag }}">{{ entry.tag }} <span>{{ entry.count }}</span></a>
+    <a class="tag" href="/tags/#{{ entry.tag }}">{{ entry.tag }}<span>{{ entry.count }}</span></a>
     {% endfor %}
   </div>
 </section>

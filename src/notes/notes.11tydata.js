@@ -1,9 +1,10 @@
 export default {
   layout: "layouts/note.njk",
-  growth: "seedling",
+  isNote: true,
+  stage: "manuscript",
   permalink: "/notes/{{ page.fileSlug }}/",
   eleventyComputed: {
-    // `planted` in the front matter is the canonical date for a note.
-    date: (data) => data.planted || data.page.date,
+    // `created` in the front matter is the canonical date for an entry.
+    date: (data) => data.created || data.page.date,
   },
 };

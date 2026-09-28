@@ -1,3 +1,6 @@
+{%- from "partials/icons.njk" import icon -%}
+{%- from "partials/stacks.njk" import stacks -%}
+{%- set incoming = collections.backlinks | lookup(page.url) -%}
 <!doctype html>
 <html lang="en" prefix="og: https://ogp.me/ns#">
 <head>
@@ -11,64 +14,158 @@
 <link rel="canonical" href="{{ page.url | fullUrl }}">
 <link rel="alternate" type="application/atom+xml" title="{{ site.title }}" href="{{ '/feed.xml' | fullUrl }}">
 
-<meta property="og:type" content="{% if layout == 'layouts/note.njk' %}article{% else %}website{% endif %}">
+<meta property="og:type" content="{% if isNote %}article{% else %}website{% endif %}">
 <meta property="og:title" content="{{ title or site.title }}">
 <meta property="og:description" content="{{ summary or description or site.description }}">
 <meta property="og:url" content="{{ page.url | fullUrl }}">
 <meta property="og:site_name" content="{{ site.title }}">
 <meta name="twitter:card" content="summary">
 
-{# A tiny inline SVG favicon: the attractor's two lobes. #}
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 4C9 6 4 12 6 18c2 5 8 5 10 1s8-3 10 2c2 5-4 9-10 7' fill='none' stroke='%239a5b2d' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
+{# The attractor's two lobes, as an inline favicon. #}
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 4C9 6 4 12 6 18c2 5 8 5 10 1s8-3 10 2c2 5-4 9-10 7' fill='none' stroke='%23c77d5f' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
 
-<link rel="stylesheet" href="/assets/css/garden.css">
+<link rel="preload" href="/assets/fonts/source-sans-3-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/css/library.css">
+<link rel="prefetch" id="graph-src" href="/graph.json" as="fetch" crossorigin>
 
 <script>
   /* Set the theme before first paint so nothing flashes. */
   (function () {
     try {
-      var t = localStorage.getItem("garden-theme");
+      var t = localStorage.getItem("library-theme");
       if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
     } catch (e) {}
   })();
 </script>
 </head>
 
-<body>
+<body data-page="{{ page.url }}">
 <a class="skip-link" href="#main">Skip to content</a>
+<a hidden id="search-src" href="/search.json"></a>
 
 <canvas id="lorenz" aria-hidden="true"></canvas>
 
-<header class="masthead shell">
-  <a class="masthead__name" href="/">{{ site.title }}</a>
-  <nav class="masthead__nav" aria-label="Primary">
-    <a href="/notes/"{% if '/notes/' in page.url %} aria-current="page"{% endif %}>notes</a>
-    <a href="/tags/"{% if '/tags/' in page.url %} aria-current="page"{% endif %}>tags</a>
-    <a href="/about/"{% if page.url == '/about/' %} aria-current="page"{% endif %}>about</a>
-    <a href="/colophon/"{% if page.url == '/colophon/' %} aria-current="page"{% endif %}>colophon</a>
-    <a href="/feed.xml">feed</a>
-  </nav>
-  <div class="controls">
-    <button class="control" type="button" data-theme-toggle aria-label="Theme">◐</button>
-    <button class="control" type="button" data-motion-toggle aria-label="Pause the attractor">❉</button>
+<div class="library">
+
+  <div class="rail rail--left">
+    <header class="brand">
+      <a class="brand__name" href="/">{{ site.title }}</a>
+      <p class="brand__tagline">{{ site.tagline }}</p>
+      <nav class="brand__nav" aria-label="Primary">
+        <a href="/notes/"{% if page.url == '/notes/' %} aria-current="page"{% endif %}>Catalogue</a>
+        <a href="/tags/"{% if page.url == '/tags/' %} aria-current="page"{% endif %}>Subjects</a>
+        <a href="/about/"{% if page.url == '/about/' %} aria-current="page"{% endif %}>About</a>
+        <a href="/colophon/"{% if page.url == '/colophon/' %} aria-current="page"{% endif %}>Colophon</a>
+        <a href="/feed.xml">Feed</a>
+      </nav>
+    </header>
+
+    <section class="graph-group" aria-labelledby="graph-title">
+      <h2 class="rail-title" id="graph-title">Graph View</h2>
+      <div class="panel graph-panel">
+        <button class="icon-button graph-expand" type="button" data-graph-expand aria-label="Open the full graph" title="Open the full graph">{{ icon("graph") }}</button>
+        <canvas class="graph-canvas" data-graph="local" aria-label="Graph of this entry's links" role="img"></canvas>
+      </div>
+    </section>
+
+    {% if isNote %}
+    <nav class="panel toc" data-toc hidden aria-label="Contents">
+      <p class="panel__title">Contents</p>
+    </nav>
+    {% endif %}
   </div>
-</header>
 
-<main id="main" class="shell">
-  {{ content | safe }}
-</main>
+  <div class="center">
+    <main class="card{% if isNote and 'footnote-ref' in content %} card--notes{% endif %}" id="main">
+      <div class="card__bar">
+        <nav class="crumbs" aria-label="Breadcrumb">
+          {% if not home %}
+          <a href="/">Library</a>
+          {% if isNote %}
+            {% for part in shelf | split("/") %}
+              <span class="crumbs__sep" aria-hidden="true">/</span><span>{{ part }}</span>
+            {% endfor %}
+          {% endif %}
+          <span class="crumbs__sep" aria-hidden="true">/</span><span aria-current="page">{{ title }}</span>
+          {% endif %}
+        </nav>
+        <div class="card__tools">
+          <button class="icon-button" type="button" data-theme-toggle aria-label="Switch theme" title="Switch theme">{{ icon("moon") }}{{ icon("sun") }}</button>
+          <button class="icon-button icon-button--boxed" type="button" data-search-open aria-label="Search (Ctrl K)" title="Search  ·  Ctrl K">{{ icon("search") }}</button>
+        </div>
+      </div>
 
-<footer class="colophon shell">
-  <span>{{ site.author.name }}</span>
-  <span>·</span>
-  <span>tended since 2026</span>
-  <span class="colophon__spacer"></span>
-  {% if site.sourcePublic %}<a href="{{ site.repo }}">source</a>{% endif %}
-  <a href="/feed.xml">atom</a>
-  <a href="/colophon/">colophon</a>
-</footer>
+      {{ content | safe }}
+    </main>
+
+    <footer class="colophon">
+      <span>{{ site.author.name }}</span>
+      <span aria-hidden="true">·</span>
+      <span>catalogued since 2026</span>
+      <span class="colophon__spacer"></span>
+      {% if site.sourcePublic %}<a href="{{ site.repo }}">source</a>{% endif %}
+      <a href="/feed.xml">atom</a>
+      <a href="/colophon/">colophon</a>
+    </footer>
+  </div>
+
+  <aside class="rail rail--right" aria-label="Navigation">
+    {% if isNote %}
+    <section class="panel backlinks" aria-labelledby="backlinks-title">
+      <h2 class="panel__title" id="backlinks-title">Backlinks</h2>
+      {% if incoming and incoming.length %}
+      <ul>
+        {% for link in incoming %}
+        <li><a href="{{ link.url }}" title="{{ link.summary }}">{{ link.title }}</a></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="panel__empty">Nothing cites this entry yet.</p>
+      {% endif %}
+    </section>
+    {% endif %}
+
+    <details class="panel explore" open>
+      <summary class="panel__title">Explore {{ icon("chevron-down") }}</summary>
+      <nav class="stacks" aria-label="Explore the stacks">
+        {{ stacks(collections.stacks, page.url, shelf if isNote else "") }}
+      </nav>
+    </details>
+  </aside>
+
+</div>
+
+<button class="attractor-badge" type="button" data-motion-toggle aria-pressed="false" title="Pause or resume the Lorenz attractor">
+  <span class="attractor-badge__dot" aria-hidden="true"></span><span>Attractor</span>
+</button>
+
+{# Search: filled in by library.js. #}
+<div class="overlay search" data-search hidden>
+  <div class="overlay__box search__box" role="dialog" aria-modal="true" aria-label="Search the library">
+    <div class="search__head">
+      {{ icon("search") }}
+      <input class="search__input" type="search" placeholder="Search the library…" autocomplete="off" spellcheck="false" aria-label="Search" aria-controls="search-results" data-search-input>
+      <kbd class="search__kbd">esc</kbd>
+    </div>
+    <ul class="search__results" id="search-results" role="listbox" data-search-results></ul>
+    <p class="search__empty" data-search-empty hidden>Nothing on the shelves matches that.</p>
+  </div>
+</div>
+
+{# Full graph: filled in by graph.js. #}
+<div class="overlay graph-overlay" data-graph-overlay hidden>
+  <div class="overlay__box graph-overlay__box" role="dialog" aria-modal="true" aria-label="Graph of the whole library">
+    <div class="graph-overlay__head">
+      <h2 class="rail-title">The whole library</h2>
+      <button class="icon-button" type="button" data-graph-close aria-label="Close the graph">{{ icon("close") }}</button>
+    </div>
+    <canvas class="graph-canvas" data-graph="global" aria-label="Graph of every entry and subject" role="img"></canvas>
+    <p class="graph-overlay__hint">Drag to move · scroll to zoom · click a node to open it</p>
+  </div>
+</div>
 
 <script src="/assets/js/lorenz.js" defer></script>
-<script src="/assets/js/garden.js" defer></script>
+<script src="/assets/js/library.js" defer></script>
+<script src="/assets/js/graph.js" defer></script>
 </body>
 </html>

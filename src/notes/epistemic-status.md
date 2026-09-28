@@ -1,12 +1,13 @@
 ---
-title: Epistemic status, and the labels on these notes
-summary: Every note carries a growth stage and a certainty. Here is what they mean and why I put them there.
-planted: 2026-03-11
-updated: 2026-08-02
-growth: evergreen
+title: Epistemic status, and the labels on these entries
+summary: Every entry carries a stage and a certainty. Here is what they mean and why they are there.
+created: 2026-03-11
+updated: 2026-09-28
+stage: bound
+shelf: Method
 certainty: high
 importance: 6
-tags: [meta, epistemics, writing]
+tags: [method, epistemics, writing]
 ---
 
 Published writing has a bad habit: it arrives at uniform confidence. A
@@ -15,28 +16,28 @@ look identical on the page. Prose has no native way to say *I am about 60% on
 this*, so everything defaults to the register of assertion.
 
 The fix is to put the confidence in the metadata, where it cannot be smoothed
-away by the sentence rhythm. Every note here opens with a block giving its
+away by the sentence rhythm. Every entry here opens with a block giving its
 stage, its certainty, and its dates.[^gwern]
 
 [^gwern]: The practice is lifted more or less wholesale from Gwern Branwen,
-who has been labelling essays this way for years. The growth-stage vocabulary
-comes from the digital-gardening tradition — Maggie Appleton's writing on it
-is the usual entry point.
+who has been labelling essays this way for years. The stage names come from
+bookmaking: a manuscript is set in type and pulled as proofs, the proofs are
+corrected, and only then is the book bound.
 
-## Growth stages
+## Stages
 
-The stage describes **maturity, not length**. A long note can be a seedling;
-a three-paragraph note can be evergreen.
+The stage describes **maturity, not length**. A long entry can be a
+manuscript; a three-paragraph entry can be bound.
 
 | Stage | Means |
 | --- | --- |
-| seedling | Just planted. Rough, possibly wrong, thinking out loud. Read it as a question. |
-| budding | Taking shape. The argument holds; the edges do not. Read it as a position. |
-| evergreen | Tended and stable. Still revised, but I stand behind it. Read it as a claim. |
+| manuscript | A working draft. Rough, possibly wrong, thinking out loud. Read it as a question. |
+| proof | Set in type, still being corrected. The argument holds; the edges do not. Read it as a position. |
+| bound | Stable enough to stand behind. Still revised, but no longer provisional. Read it as a claim. |
 
 Nothing is ever marked *finished*, because nothing is. The stage can also go
-backwards — learning that a note was wrong demotes it, and that demotion is
-itself information worth publishing.
+backwards: learning that a bound entry was wrong sends it back to proof, and
+that demotion is itself information worth publishing.
 
 ## Certainty
 
@@ -74,8 +75,8 @@ The first is courtesy: a reader deserves to know whether they are being
 handed a conclusion or a sketch.
 
 The second is that labelling changes what I write. Having to put *speculative*
-at the top of a note removes the incentive to write around a weak argument
+at the top of an entry removes the incentive to write around a weak argument
 until it sounds strong. It becomes possible to publish something half-formed
 without the usual tax of pretending it is not — which means more of the
-half-formed things get published, which is the entire point of a garden. See
-[[digital-gardens|a garden, not a blog]].
+half-formed things reach the shelves, which is the entire point of a library
+like this one. See [[a-library-not-a-blog|a library, not a blog]].

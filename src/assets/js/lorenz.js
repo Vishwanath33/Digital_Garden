@@ -106,7 +106,9 @@
     canvas.style.height = `${height}px`;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     // Face-on the figure is ~60 units across and ~54 tall about Z_CENTER.
-    scale = Math.min(width / 64, height / 56);
+    // Drawn a little larger than fits, so the lobes reach out past the
+    // centre card into the side margins; the tips may leave the screen.
+    scale = Math.min(width / 50, height / 44);
   };
 
   // --- colour, read from the stylesheet so themes stay in one place -------
@@ -171,7 +173,7 @@
       // Points behind the centre of rotation recede.
       const depth = depthSum / (end - start + 1);
       const near = 0.5 + 0.5 * Math.tanh(depth / 18);
-      const alpha = 0.30 * fade * t.weight * (0.35 + 0.65 * near);
+      const alpha = 0.48 * fade * t.weight * (0.35 + 0.65 * near);
 
       ctx.strokeStyle = `rgba(${ink}, ${alpha.toFixed(4)})`;
       ctx.lineWidth = (0.55 + 0.75 * near) * (0.6 + 0.4 * age);
@@ -247,6 +249,11 @@
     frame = requestAnimationFrame(tick);
   };
 
+  // Tell the page (the attractor badge) whenever the motion changes, including
+  // when the frame budget stops it rather than the reader.
+  const announce = () =>
+    document.dispatchEvent(new CustomEvent("lorenzchange", { detail: { running } }));
+
   const start = () => {
     if (running || reduceMotion.matches) return;
     running = true;
@@ -254,11 +261,14 @@
     samples = 0;
     elapsed = 0;
     frame = requestAnimationFrame(tick);
+    announce();
   };
 
   const stop = () => {
+    const was = running;
     running = false;
     cancelAnimationFrame(frame);
+    if (was) announce();
   };
 
   const boot = () => {

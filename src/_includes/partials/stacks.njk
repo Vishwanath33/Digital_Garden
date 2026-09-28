@@ -1,0 +1,19 @@
+{%- from "partials/icons.njk" import icon -%}
+{#- The Explore tree. Recursive: a shelf renders its own children. -#}
+{%- macro stacks(items, currentUrl, currentShelf) -%}
+<ul>
+  {%- for item in items %}
+  {%- if item.type == "shelf" %}
+  {%- set onPath = currentShelf and (currentShelf == item.path or currentShelf.startsWith(item.path + "/")) %}
+  <li>
+    <details{% if onPath %} open{% endif %}>
+      <summary>{{ icon("chevron") }}<span>{{ item.name }}</span></summary>
+      {{ stacks(item.children, currentUrl, currentShelf) }}
+    </details>
+  </li>
+  {%- else %}
+  <li><a href="{{ item.url }}"{% if item.url == currentUrl %} aria-current="page"{% endif %}>{{ item.title }}</a></li>
+  {%- endif %}
+  {%- endfor %}
+</ul>
+{%- endmacro -%}

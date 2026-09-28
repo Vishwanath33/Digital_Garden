@@ -1,11 +1,11 @@
 // ---------------------------------------------------------------------------
-// The one file to edit when you rename the garden or move it to a new domain.
+// The one file to edit when you rename the library or move it to a new domain.
 // ---------------------------------------------------------------------------
 export default {
-  title: "The Lorenz Garden",
-  tagline: "Notes that grow in public.",
+  title: "The Lorenz Library",
+  tagline: "A small library, sensitive to initial conditions.",
   description:
-    "A digital garden: unfinished notes, slowly tended. Sensitive to initial conditions.",
+    "A personal library of linked notes: catalogued, revised, and shelved by subject.",
   author: {
     name: "Vishwanath",
     email: "vishwanath.221b@gmail.com",
@@ -45,22 +45,19 @@ export default {
     return path;
   },
 
-  // Growth stages, in the gardening idiom: a note's maturity, not its length.
+  // Stages, borrowed from bookmaking: how finished an entry is, not how long.
   stages: {
-    seedling: {
-      label: "seedling",
-      glyph: "◌",
-      blurb: "Just planted. Rough, possibly wrong, thinking out loud.",
+    manuscript: {
+      label: "manuscript",
+      blurb: "A working draft. Thinking out loud; parts of it are probably wrong.",
     },
-    budding: {
-      label: "budding",
-      glyph: "◔",
-      blurb: "Taking shape. The argument holds, the edges do not.",
+    proof: {
+      label: "proof",
+      blurb: "Set in type, still being corrected. The argument holds; the edges don't.",
     },
-    evergreen: {
-      label: "evergreen",
-      glyph: "●",
-      blurb: "Tended and stable. Still revised, but I stand behind it.",
+    bound: {
+      label: "bound",
+      blurb: "Stable enough to stand behind. Still revised, but no longer provisional.",
     },
   },
 };

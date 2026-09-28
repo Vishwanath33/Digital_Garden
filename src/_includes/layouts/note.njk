@@ -1,35 +1,32 @@
 ---
 layout: layouts/base.njk
 ---
-{% set stage = site.stages[growth] or site.stages.seedling %}
-{% set incoming = collections.backlinks | lookup(page.url) %}
+{% set st = site.stages[stage] or site.stages.manuscript %}
 
 <article>
-  <header>
-    <h1 class="note-title">{{ title }}</h1>
-    {% if summary %}<p class="note-summary">{{ summary }}</p>{% endif %}
+  <header class="entry-head">
+    <h1 class="entry-title">{{ title }}</h1>
+    {% if summary %}<p class="entry-summary">{{ summary }}</p>{% endif %}
 
     <div class="meta">
       <dl>
         <dt>Stage</dt>
-        <dd>
-          <span class="stage stage--{{ stage.label }}" title="{{ stage.blurb }}">{{ stage.label }}</span>
-        </dd>
+        <dd><span class="stage stage--{{ st.label }}" title="{{ st.blurb }}">{{ st.label }}</span></dd>
       </dl>
       <dl>
-        <dt>Planted</dt>
-        <dd><time datetime="{{ (planted or page.date) | shortDate }}">{{ (planted or page.date) | readableDate }}</time></dd>
+        <dt>Written</dt>
+        <dd><time datetime="{{ (created or page.date) | shortDate }}">{{ (created or page.date) | readableDate }}</time></dd>
       </dl>
       {% if updated %}
       <dl>
-        <dt>Last tended</dt>
+        <dt>Revised</dt>
         <dd><time datetime="{{ updated | shortDate }}">{{ updated | readableDate }}</time></dd>
       </dl>
       {% endif %}
       {% if certainty %}
       <dl>
         <dt>Certainty</dt>
-        <dd class="certainty">{{ certainty }}</dd>
+        <dd>{{ certainty }}</dd>
       </dl>
       {% endif %}
       {% if importance %}
@@ -43,8 +40,8 @@ layout: layouts/base.njk
         <dd>{{ content | readingTime }} min</dd>
       </dl>
       {% if tags and tags.length %}
-      <dl style="grid-column: 1 / -1">
-        <dt>Tags</dt>
+      <dl class="meta__wide">
+        <dt>Subjects</dt>
         <dd>
           <span class="tag-list">
             {% for tag in tags %}<a class="tag" href="/tags/#{{ tag }}">{{ tag }}</a>{% endfor %}
@@ -55,34 +52,15 @@ layout: layouts/base.njk
     </div>
   </header>
 
-  <nav class="toc" data-toc hidden aria-label="Contents">
-    <p class="toc-heading">Contents</p>
-  </nav>
-
   <div class="prose prose--dropcap" data-sidenotes>
     {{ content | safe }}
   </div>
 
-  {% if incoming and incoming.length %}
-  <nav class="backlinks" aria-label="Notes that link here">
-    <p class="section-label">Linked from</p>
-    <ul>
-      {% for link in incoming %}
-      <li>
-        <a href="{{ link.url }}">{{ link.title }}</a>
-        {% if link.summary %}<p>{{ link.summary }}</p>{% endif %}
-      </li>
-      {% endfor %}
-    </ul>
-  </nav>
-  {% endif %}
-
   {% if site.sourcePublic %}
-  <nav class="backlinks" aria-label="Note actions">
-    <p class="section-label">This note</p>
-    <ul>
-      <li><a href="{{ site.repo }}/blob/{{ site.repoBranch }}/src/notes/{{ page.fileSlug }}.md">History &amp; source</a></li>
-    </ul>
-  </nav>
+  <p class="entry-source">
+    <a href="{{ site.repo }}/commits/{{ site.repoBranch }}/src/notes/{{ page.fileSlug }}.md">Revision history</a>
+    <span aria-hidden="true">·</span>
+    <a href="{{ site.repo }}/blob/{{ site.repoBranch }}/src/notes/{{ page.fileSlug }}.md">Source</a>
+  </p>
   {% endif %}
 </article>

@@ -1,19 +1,19 @@
 ---
 layout: layouts/base.njk
-title: Tags
+title: Subjects
 permalink: /tags/index.html
 ---
-<h1 class="page-title">Tags</h1>
-<p class="lede">The garden's beds, by how crowded they are.</p>
+<h1 class="page-title">Subjects</h1>
+<p class="lede">Every subject heading in the library, by how many entries sit under it.</p>
 
-<div class="tag-cloud" style="margin-bottom:3rem">
+<div class="tag-cloud" style="margin: 1.5rem 0 3rem">
   {% for entry in collections.tagIndex %}
-  <a class="tag" href="#{{ entry.tag }}">{{ entry.tag }} <span>{{ entry.count }}</span></a>
+  <a class="tag" href="#{{ entry.tag }}">{{ entry.tag }}<span>{{ entry.count }}</span></a>
   {% endfor %}
 </div>
 
 {% for entry in collections.tagIndex %}
-<section id="{{ entry.tag }}" style="margin-bottom:2.5rem">
+<section id="{{ entry.tag }}" style="margin-bottom: 2.5rem; scroll-margin-top: 2rem">
   <h2 class="group-heading">#{{ entry.tag }} — {{ entry.count }}</h2>
   <ul class="entry-list">
     {% for note in entry.notes %}
