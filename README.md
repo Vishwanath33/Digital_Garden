@@ -150,8 +150,10 @@ figure sits are CSS custom properties (`--traj-a/b/c`, `--atlas`,
 The text sits on a sheet (`--sheet`, 80% opaque) so the background can never
 make it hard to read. *Still* in the header stops the motion and remembers
 the choice; under `prefers-reduced-motion` it never moves; it rests in hidden
-tabs; and if frames get slow it lowers its resolution, then shortens its
-trails, then stops.
+tabs; and if frames get slow (judged half a second at a time) it lowers its
+resolution, then shortens its trails, then stops. The level a device settles
+at is kept in `localStorage` (`library-motion-level`, for 14 days), so later
+pages start there instead of stuttering while they find out again.
 
 Knobs near the top of the script: `STEPS_PER_FRAME` (speed), `TRAIL` (how
 much of each path stays lit), `ATLAS_N` (density of the faint atlas), `SWING`

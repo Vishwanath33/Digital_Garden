@@ -123,6 +123,21 @@ const canvasPainted = (p, sel) =>
   await p.click("[data-motion-toggle]");
   check(await p.evaluate(() => window.__lorenz.running), "Motion starts it again");
 
+  // How finely it draws is remembered per device, so a slow machine is not
+  // made to stutter again on every page while that is found out; an old
+  // verdict is not trusted.
+  const saveLevel = (at) => p.evaluate((at) => localStorage.setItem("library-motion-level", JSON.stringify({
+    level: 3, device: `${window.devicePixelRatio || 1}@${screen.width}x${screen.height}`, at: at ?? Date.now(),
+  })), at);
+  await saveLevel();
+  await p.reload();
+  check(await p.evaluate(() => window.__lorenz.level) === 3, "the drawing level a device settled at is remembered");
+  await saveLevel(Date.now() - 30 * 864e5);
+  await p.reload();
+  check(await p.evaluate(() => window.__lorenz.level) === 0, "…but not for ever");
+  await p.evaluate(() => localStorage.removeItem("library-motion-level"));
+  check((await p.locator(".foot").innerText()).toLowerCase().indexOf("lorenz library") === -1, "footer does not repeat the library's name");
+
   // Theme: two states, named for the one it switches to, persisted.
   const label = await p.locator("[data-theme-toggle]").innerText();
   await p.click("[data-theme-toggle]");

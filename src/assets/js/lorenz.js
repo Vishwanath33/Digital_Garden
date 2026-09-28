@@ -68,9 +68,13 @@
       atlas.xs[i] = s[0]; atlas.ys[i] = s[1]; atlas.zs[i] = s[2];
     }
   }
-  const atlasCanvas = document.createElement("canvas");
-  const atlasCtx = atlasCanvas.getContext("2d");
+  // Two buffers: the one on screen, and the next view, drawn a slice per
+  // frame so no single frame pays for the whole figure.
+  let atlasCanvas = document.createElement("canvas");
+  let atlasNext = document.createElement("canvas");
+  const ATLAS_SLICES = 4;
   let atlasTheta = NaN;
+  let atlasJob = null;               // the view being drawn into atlasNext
 
   const makeTrajectory = (key, dz) => {
     const tr = {
@@ -101,7 +105,29 @@
 
   // --- viewport -------------------------------------------------------------
   let W = 0, H = 0, dpr = 1, scale = 1, cx = 0, cy = 0;
-  let dprCap = 1.5;                  // lowered first if drawing is slow
+
+  // How finely to draw, from finest to plainest: resolution goes first,
+  // then trail length. The level a device settles at is remembered, so the
+  // next page starts there rather than stuttering while it finds out again.
+  const LEVELS = [
+    { dpr: 1.5, quality: 1 },
+    { dpr: 1, quality: 1 },
+    { dpr: 1, quality: 0.65 },
+    { dpr: 1, quality: 0.42 },
+    { dpr: 1, quality: 0.3 },
+  ];
+  const LEVEL_KEY = "library-motion-level";
+  const LEVEL_DAYS = 14;             // then find out afresh
+  const device = `${window.devicePixelRatio || 1}@${screen.width}x${screen.height}`;
+  let level = 0;
+  try {
+    const saved = JSON.parse(localStorage.getItem(LEVEL_KEY) || "null");
+    if (saved && saved.device === device && Date.now() - saved.at < LEVEL_DAYS * 864e5) {
+      level = Math.min(LEVELS.length - 1, Math.max(0, saved.level | 0));
+    }
+  } catch { /* storage unavailable: start at the finest */ }
+  let dprCap = LEVELS[level].dpr;
+  let quality = LEVELS[level].quality;
 
   const resize = () => {
     dpr = Math.min(window.devicePixelRatio || 1, dprCap);
@@ -109,8 +135,10 @@
     H = window.innerHeight;
     canvas.width = Math.round(W * dpr);
     canvas.height = Math.round(H * dpr);
-    atlasCanvas.width = canvas.width;
-    atlasCanvas.height = canvas.height;
+    for (const c of [atlasCanvas, atlasNext]) {
+      c.width = canvas.width;
+      c.height = canvas.height;
+    }
     // Large enough that the two lobes open out either side of the reading
     // column; the view rocks ±0.4 rad, so allow for its widest angle.
     // Where the figure sits and how wide it is drawn come from the
@@ -125,6 +153,7 @@
     cx = W / 2;
     cy = H * focusY;
     atlasTheta = NaN;
+    atlasJob = null;
   };
 
   // --- colour and blending, from the stylesheet -----------------------------
@@ -156,8 +185,6 @@
   let cos = Math.cos(theta), sin = Math.sin(theta);
 
   // --- drawing --------------------------------------------------------------
-  let quality = 1;
-
   // The moving points' glow, pre-rendered (shadowBlur costs half the frame rate).
   const HALO = 12;
   const halos = {};
@@ -177,24 +204,45 @@
     return (halos[key] = c);
   };
 
-  const drawAtlas = () => {
-    if (Math.abs(theta - atlasTheta) < 0.004) return;
-    atlasTheta = theta;
-    const a = atlasCtx;
+  // Drawn in hairlines, exactly one device pixel wide: a wider translucent
+  // stroke over a path that crosses itself thousands of times is some
+  // twenty times slower, and was what made the first seconds stutter. The
+  // thinner line is given proportionally more ink, so it reads the same.
+  const drawAtlasSlice = (job) => {
+    const a = atlasNext.getContext("2d");
+    if (job.slice === 0) {
+      a.setTransform(1, 0, 0, 1, 0, 0);
+      a.clearRect(0, 0, atlasNext.width, atlasNext.height);
+    }
+    const per = Math.ceil(ATLAS_N / ATLAS_SLICES);
+    const from = job.slice * per;
+    const to = Math.min(ATLAS_N - 1, from + per);
     a.setTransform(dpr, 0, 0, dpr, 0, 0);
-    a.clearRect(0, 0, W, H);
-    a.lineJoin = "round";
-    a.strokeStyle = `rgba(${look.atlas}, ${look.atlasAlpha})`;
-    a.lineWidth = 1;
+    a.strokeStyle = `rgba(${look.atlas}, ${Math.min(1, look.atlasAlpha * dpr)})`;
+    a.lineWidth = 1 / dpr;
     a.beginPath();
-    for (let i = 0; i < ATLAS_N; i++) {
+    for (let i = from; i <= to; i++) {
       const x = atlas.xs[i], y = atlas.ys[i];
-      const sx = cx + (x * cos - y * sin) * scale;
+      const sx = cx + (x * job.cos - y * job.sin) * scale;
       const sy = cy - (atlas.zs[i] - Z_CENTER) * scale;
-      if (i) a.lineTo(sx, sy);
-      else a.moveTo(sx, sy);
+      if (i === from) a.moveTo(sx, sy);
+      else a.lineTo(sx, sy);
     }
     a.stroke();
+    job.slice++;
+  };
+
+  const drawAtlas = () => {
+    const now = Number.isNaN(atlasTheta);   // nothing on screen yet: draw it whole
+    if (!atlasJob && (now || Math.abs(theta - atlasTheta) >= 0.004)) {
+      atlasJob = { theta, cos, sin, slice: 0 };
+    }
+    if (!atlasJob) return;
+    do drawAtlasSlice(atlasJob); while (now && atlasJob.slice < ATLAS_SLICES);
+    if (atlasJob.slice < ATLAS_SLICES) return;
+    [atlasCanvas, atlasNext] = [atlasNext, atlasCanvas];
+    atlasTheta = atlasJob.theta;
+    atlasJob = null;
   };
 
   const drawTrajectory = (tr) => {
@@ -254,23 +302,49 @@
   let running = false;
   let stopped = false;               // the reader asked for stillness
   let frame = 0;
-  let samples = 0, elapsed = 0, lastFrame = 0;
 
   try {
     stopped = localStorage.getItem(MOTION_KEY) === "still";
   } catch { /* storage unavailable: default to motion */ }
 
-  // If frames get expensive, give up what nobody will notice first:
-  // resolution, then trail length; and if even that is not enough, stop,
-  // leaving a still figure. A background must never make reading slow.
+  // If frames get expensive, give up what nobody will notice first, a level
+  // at a time; and if even the plainest is too slow, stop, leaving a still
+  // figure. A background must never make reading slow. Frames are judged
+  // half a second at a time, so a slow device is found out at once, not
+  // after a long stretch of stutter; the first moments after starting are
+  // the page loading, not the drawing, and are not held against it.
+  const WINDOW = 500;
+  const SETTLE = 600;
+  let windowStart = 0;               // 0: not started; before it: settling
+  let frames = -1;                   // frames judged so far; -1: settling
+
+  const effective = (l) => `${Math.min(window.devicePixelRatio || 1, LEVELS[l].dpr)}/${LEVELS[l].quality}`;
+  const lower = () => {
+    const was = effective(level);
+    let next = level;
+    while (next < LEVELS.length - 1 && effective(next) === was) next++;
+    if (effective(next) === was) return false;
+    level = next;
+    quality = LEVELS[level].quality;
+    if (LEVELS[level].dpr !== dprCap) { dprCap = LEVELS[level].dpr; resize(); }
+    try { localStorage.setItem(LEVEL_KEY, JSON.stringify({ level, device, at: Date.now() })); } catch { /* fine */ }
+    return true;
+  };
+
   const budget = (now) => {
-    if (lastFrame) { elapsed += now - lastFrame; samples++; }
-    lastFrame = now;
-    if (samples < 90) return;
-    const avg = elapsed / samples;
-    samples = 0; elapsed = 0;
-    if (avg > 21 && dprCap > 1 && (window.devicePixelRatio || 1) > 1) { dprCap = 1; resize(); }
-    else if (avg > 26 && quality > 0.3) quality = Math.max(0.3, quality * 0.65);
+    if (!windowStart) { windowStart = now + SETTLE; return; }
+    if (frames < 0) {
+      if (now >= windowStart) { windowStart = now; frames = 0; }
+      return;
+    }
+    frames++;
+    const span = now - windowStart;
+    if (span < WINDOW || frames < 10) return;
+    const avg = span / frames;
+    windowStart = now;
+    frames = 0;
+    if (avg <= 21) return;
+    if (lower()) { windowStart = now + 250; frames = -1; }
     else if (avg > 45) { stop(); render(); }
   };
 
@@ -299,7 +373,7 @@
   const start = () => {
     if (running || stopped || reduceMotion.matches || document.hidden) return;
     running = true;
-    lastFrame = 0; samples = 0; elapsed = 0;
+    windowStart = 0; frames = -1;
     frame = requestAnimationFrame(tick);
   };
 
@@ -334,6 +408,7 @@
     requestAnimationFrame(() => {
       readLook();
       atlasTheta = NaN;
+      atlasJob = null;
       if (!running) render();
     }),
   );
@@ -352,6 +427,7 @@
 
   window.__lorenz = {
     get running() { return running; },
+    get level() { return level; },
     toggle() { button?.click(); return running; },
   };
 })();
