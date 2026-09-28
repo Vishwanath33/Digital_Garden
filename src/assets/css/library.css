@@ -79,7 +79,7 @@
 
   /* The sheet, and the table it lies on. */
   --table: #e6e0d4;
-  --sheet: rgba(245, 242, 235, 0.88);
+  --sheet: rgba(245, 242, 235, 0.8);
   --sheet-edge: rgba(90, 75, 60, 0.14);
   --sheet-shadow: 0 30px 80px -40px rgba(60, 45, 30, 0.35);
 
@@ -88,8 +88,8 @@
   --traj-b: 179, 54, 27;
   --traj-c: 32, 122, 114;
   --atlas: 58, 50, 44;
-  --atlas-alpha: 0.11;
-  --trail-alpha: 0.6;
+  --atlas-alpha: 0.22;
+  --trail-alpha: 0.95;
   --trail-blend: source-over;
 
   /* The catalogue card. */
@@ -110,15 +110,15 @@
     --rule: #2c2d31;
     --accent: #ff7b50;
     --table: #0a0c10;
-    --sheet: rgba(18, 19, 22, 0.86);
+    --sheet: rgba(18, 19, 22, 0.8);
     --sheet-edge: rgba(255, 255, 255, 0.07);
     --sheet-shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.9);
     --traj-a: 244, 235, 216;
     --traj-b: 255, 104, 58;
     --traj-c: 58, 200, 186;
     --atlas: 244, 235, 216;
-    --atlas-alpha: 0.12;
-    --trail-alpha: 0.85;
+    --atlas-alpha: 0.24;
+    --trail-alpha: 1;
     --trail-blend: lighter;
     --card: #18191c;
     --card-line: rgba(130, 165, 215, 0.1);
@@ -136,15 +136,15 @@
   --rule: #2c2d31;
   --accent: #ff7b50;
   --table: #0a0c10;
-  --sheet: rgba(18, 19, 22, 0.86);
+  --sheet: rgba(18, 19, 22, 0.8);
   --sheet-edge: rgba(255, 255, 255, 0.07);
   --sheet-shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.9);
   --traj-a: 244, 235, 216;
   --traj-b: 255, 104, 58;
   --traj-c: 58, 200, 186;
   --atlas: 244, 235, 216;
-  --atlas-alpha: 0.12;
-  --trail-alpha: 0.85;
+  --atlas-alpha: 0.24;
+  --trail-alpha: 1;
   --trail-blend: lighter;
   --card: #18191c;
   --card-line: rgba(130, 165, 215, 0.1);

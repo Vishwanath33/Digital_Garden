@@ -13,11 +13,13 @@ permalink: /notes/index.html
   </p>
 </header>
 
+{% if collections.notes.length %}
 <form class="filter" role="search" onsubmit="return false">
   <label class="filter__label" for="filter">Filter</label>
   <input class="filter__input" id="filter" type="search" autocomplete="off"
          placeholder="title, shelf, subject…" data-filter="#catalogue">
 </form>
+{% endif %}
 
 <div id="catalogue">
   {% for group in collections.notes | byYear %}
@@ -45,4 +47,8 @@ permalink: /notes/index.html
   {% endfor %}
 </div>
 
+{% if collections.notes.length %}
 <p class="empty-note" data-filter-empty hidden>Nothing in the catalogue matches that.</p>
+{% else %}
+<p class="empty-note">Nothing has been catalogued yet.</p>
+{% endif %}

@@ -185,7 +185,7 @@
     a.clearRect(0, 0, W, H);
     a.lineJoin = "round";
     a.strokeStyle = `rgba(${look.atlas}, ${look.atlasAlpha})`;
-    a.lineWidth = 0.8;
+    a.lineWidth = 1;
     a.beginPath();
     for (let i = 0; i < ATLAS_N; i++) {
       const x = atlas.xs[i], y = atlas.ys[i];
@@ -224,7 +224,7 @@
       const near = 0.5 + 0.5 * Math.tanh(depth / (end - start + 1) / 14);
       const alpha = (0.1 + 0.9 * Math.pow(age, 1.5)) * (0.5 + 0.5 * near) * look.trailAlpha;
       ctx.strokeStyle = `rgba(${rgb}, ${alpha.toFixed(3)})`;
-      ctx.lineWidth = (0.8 + 0.9 * near) * (0.75 + 0.5 * age);
+      ctx.lineWidth = (1.05 + 1.1 * near) * (0.75 + 0.5 * age);
       ctx.stroke();
     }
 

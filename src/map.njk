@@ -10,7 +10,11 @@ permalink: /map/index.html
   <p class="entry__dek">Every entry, joined to the entries it cites and to its subjects. Drag to move, scroll to zoom, select a node to open it.</p>
 </header>
 
+{% if not collections.notes.length %}
+<p class="empty-note">Nothing to map yet: the map fills in as entries are added and cite one another.</p>
+{% else %}
 <figure class="map">
   <canvas class="graph-canvas" data-graph="global" role="img" aria-label="Graph of every entry and subject in the library"></canvas>
   <figcaption><span class="fig-label">Key.</span> Filled circles are entries, sized by how many links they carry; hollow circles are subjects. The same catalogue, as a <a href="/notes/">list</a>.</figcaption>
 </figure>
+{% endif %}

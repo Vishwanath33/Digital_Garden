@@ -9,6 +9,10 @@ permalink: /tags/index.html
   <p class="entry__dek">Every subject heading in the library, alphabetically, with the entries filed under it.</p>
 </header>
 
+{% if not collections.tagIndex.length %}
+<p class="empty-note">No subjects yet: they appear as entries are filed under them.</p>
+{% endif %}
+
 <nav class="letters" aria-label="Subjects">
   {% for entry in collections.tagIndex | sort(false, false, "tag") %}<a href="#{{ entry.tag }}">{{ entry.tag }}<sup>{{ entry.count }}</sup></a>{% endfor %}
 </nav>

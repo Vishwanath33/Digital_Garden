@@ -13,7 +13,7 @@ is kept on the `design/plate` branch.
 npm install
 npm run dev     # http://localhost:8080, live reload
 npm run build   # → _site/
-npm test        # builds, then runs a browser smoke test
+npm test        # browser smoke test (builds its own throwaway copies)
 ```
 
 The design, and the books it draws on (Butterick, Bringhurst, Tschichold,
@@ -22,6 +22,13 @@ Tufte, Müller-Brockmann), are explained on the site's colophon page.
 ---
 
 ## Adding an entry
+
+The library starts empty: the home page, catalogue, subjects and map each
+say so until the first entry arrives. Five sample entries, showing every
+feature (sidenotes, wiki links, asides, shelves, citations), are kept in
+`test/fixtures/notes/`, where the smoke test uses them. They are not
+published; copy one into `src/notes/` if you want a starting point.
+
 
 Add a Markdown file to `src/notes/`. The filename becomes the address, so
 `src/notes/why-maps-lie.md` is served at `/notes/why-maps-lie/`.
@@ -131,7 +138,7 @@ figure sits are CSS custom properties (`--traj-a/b/c`, `--atlas`,
 `--atlas-alpha`, `--trail-alpha`, `--trail-blend`, `--bg-focus-y`,
 `--bg-width`, `--bg-height`) at the top of `library.css`.
 
-The text sits on a sheet (`--sheet`, 88% opaque) so the background can never
+The text sits on a sheet (`--sheet`, 80% opaque) so the background can never
 make it hard to read. *Still* in the header stops the motion and remembers
 the choice; under `prefers-reduced-motion` it never moves; it rests in hidden
 tabs; and if frames get slow it lowers its resolution, then shortens its

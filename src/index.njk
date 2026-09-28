@@ -9,24 +9,11 @@ permalink: /index.html
   <p class="display-sub">{{ site.tagline }}</p>
 </section>
 
-<section class="prose foreword" aria-label="Foreword">
-  <p>
-    This is a library rather than a blog: a small collection of entries,
-    shelved by subject, cross-referenced, and corrected in place. Nothing here
-    is finished and some of it is wrong. Every entry says how far along it is,
-    from <a href="/notes/epistemic-status/">manuscript to bound</a>, and how
-    much I currently believe it.
-  </p>
-  <p>
-    Start anywhere. The contents below are arranged by shelf, the
-    <a href="/notes/">catalogue</a> by date, and the <a href="/tags/">subjects</a>
-    alphabetically; the <a href="/map/">map</a> shows what cites what. Or press
-    <kbd>/</kbd> to search.
-  </p>
-</section>
-
 <section class="contents" aria-labelledby="contents-title">
   <h2 class="section-head" id="contents-title">Contents</h2>
+  {% if not collections.notes.length %}
+  <p class="empty-note">The shelves are empty for now.</p>
+  {% endif %}
   {% for part in collections.parts %}
   <h3 class="part"><span class="part__num">{{ part.numeral }}</span>{{ part.name }}</h3>
   <ol class="toc">

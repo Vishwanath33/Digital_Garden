@@ -1,13 +1,13 @@
 {
   "name": "digital-garden",
   "version": "1.0.0",
-  "description": "A digital garden — notes that grow in public.",
+  "description": "A digital garden \u2014 notes that grow in public.",
   "type": "module",
   "scripts": {
     "dev": "eleventy --serve --quiet",
     "build": "eleventy",
     "clean": "rm -rf _site",
-    "test": "npm run build && node test/smoke.mjs"
+    "test": "node test/smoke.mjs"
   },
   "license": "MIT",
   "dependencies": {

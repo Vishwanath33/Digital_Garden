@@ -58,7 +58,6 @@ It keeps out of the way. *Still*, in the header, stops it and remembers the
 choice; under `prefers-reduced-motion` it never moves at all; it rests while
 the tab is hidden; and if it ever starts costing frames it gives up
 resolution, then the length of its trails, then its motion.
-[The entry on the attractor](/notes/lorenz-attractor/) says why it is there.
 
 ## The apparatus
 

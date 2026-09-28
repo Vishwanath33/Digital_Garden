@@ -5,32 +5,61 @@
  */
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
+import { cpSync, mkdtempSync, readdirSync, rmSync, symlinkSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { tmpdir } from "node:os";
 import { extname, join, normalize } from "node:path";
 import { chromium } from "playwright-core";
 import site from "../src/_data/site.js";
 
-const ROOT = new URL("../_site/", import.meta.url).pathname;
+const REPO = new URL("..", import.meta.url).pathname;
+const FIXTURES = join(REPO, "test/fixtures/notes");
+const ELEVENTY = join(REPO, "node_modules/@11ty/eleventy/cmd.cjs");
 const TYPES = {
   ".html": "text/html", ".css": "text/css", ".js": "text/javascript", ".json": "application/json",
   ".xml": "application/xml", ".txt": "text/plain", ".svg": "image/svg+xml", ".woff2": "font/woff2",
 };
 
-const PREFIX = site.pathPrefix;
-const BASE = `http://127.0.0.1:8099${PREFIX}`;
+/**
+ * Build a throwaway copy of the site: exactly as published, or with the
+ * sample entries in test/fixtures added, so every feature that needs
+ * entries can be exercised without publishing any.
+ */
+const temps = [];
+function build({ withFixtures }) {
+  const dir = mkdtempSync(join(tmpdir(), "library-"));
+  temps.push(dir);
+  for (const f of ["eleventy.config.js", "package.json", "src"]) cpSync(join(REPO, f), join(dir, f), { recursive: true });
+  symlinkSync(join(REPO, "node_modules"), join(dir, "node_modules"));
+  if (withFixtures) for (const f of readdirSync(FIXTURES)) cpSync(join(FIXTURES, f), join(dir, "src/notes", f));
+  execFileSync(process.execPath, [ELEVENTY, "--quiet"], { cwd: dir, stdio: "pipe" });
+  return join(dir, "_site");
+}
 
-const server = createServer(async (req, res) => {
-  let p = normalize(decodeURIComponent(req.url.split("?")[0]));
-  if (PREFIX !== "/" && p.startsWith(PREFIX.slice(0, -1))) p = p.slice(PREFIX.length - 1) || "/";
-  if (p.endsWith("/")) p += "index.html";
-  try {
-    const body = await readFile(join(ROOT, p));
-    res.writeHead(200, { "content-type": TYPES[extname(p)] || "application/octet-stream" });
-    res.end(body);
-  } catch {
-    res.writeHead(404).end("not found");
-  }
-});
-await new Promise((r) => server.listen(8099, "127.0.0.1", r));
+// Serve under the same path prefix GitHub Pages will use.
+const PREFIX = site.pathPrefix;
+function serve(root, port) {
+  const server = createServer(async (req, res) => {
+    let p = normalize(decodeURIComponent(req.url.split("?")[0]));
+    if (PREFIX !== "/" && p.startsWith(PREFIX.slice(0, -1))) p = p.slice(PREFIX.length - 1) || "/";
+    if (p.endsWith("/")) p += "index.html";
+    try {
+      const body = await readFile(join(root, p));
+      res.writeHead(200, { "content-type": TYPES[extname(p)] || "application/octet-stream" });
+      res.end(body);
+    } catch {
+      res.writeHead(404).end("not found");
+    }
+  });
+  return new Promise((r) => server.listen(port, "127.0.0.1", () => r(server)));
+}
+
+const servers = [
+  await serve(build({ withFixtures: true }), 8099),
+  await serve(build({ withFixtures: false }), 8098),
+];
+const BASE = `http://127.0.0.1:8099${PREFIX}`;        // with sample entries
+const EMPTY = `http://127.0.0.1:8098${PREFIX}`;       // as published
 
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome",
@@ -186,17 +215,6 @@ const canvasPainted = (p, sel) =>
   await ctx.close();
 }
 
-// --- reshelved entries still land -------------------------------------------------
-{
-  const { ctx, p } = await page();
-  for (const [from, to] of [["notes/digital-gardens/", "notes/a-library-not-a-blog/"], ["notes/tending/", "notes/keeping-the-stacks/"]]) {
-    await p.goto(`${BASE}${from}`);
-    await p.waitForURL((u) => u.pathname.endsWith(to), { timeout: 5000 }).catch(() => {});
-    check(new URL(p.url()).pathname === `${PREFIX}${to}`, `old address /${from} forwards to /${to}`);
-  }
-  await ctx.close();
-}
-
 // --- catalogue and subjects -------------------------------------------------------
 {
   const { ctx, p } = await page();
@@ -264,8 +282,38 @@ const canvasPainted = (p, sel) =>
   await ctx.close();
 }
 
+// --- the site as published: no entries yet -------------------------------------
+{
+  const { ctx, p, problems } = await page();
+  for (const path of ["", "notes/", "tags/", "map/", "about/", "colophon/", "404.html"]) {
+    await p.goto(`${EMPTY}${path}`, { waitUntil: "networkidle" });
+  }
+  check(problems.length === 0, `empty site: every page loads cleanly${problems.length ? " — " + problems.join(", ") : ""}`);
+
+  await p.goto(EMPTY, { waitUntil: "networkidle" });
+  await p.waitForTimeout(500);
+  check((await p.locator(".contents .empty-note").innerText()).includes("empty"), "empty site: contents say the shelves are empty");
+  check(await p.locator(".foreword").count() === 0, "empty site: no introduction on the home page");
+  check(await p.evaluate(() => window.__lorenz.running) && (await canvasPainted(p, "[data-lorenz]")), "empty site: background running");
+
+  await p.keyboard.press("/");
+  await p.keyboard.type("library");
+  await p.waitForTimeout(400);
+  check(await p.locator("[data-search-empty]").isVisible(), "empty site: search opens and finds nothing, cleanly");
+  await p.keyboard.press("Escape");
+
+  await p.goto(`${EMPTY}notes/`, { waitUntil: "networkidle" });
+  check(await p.locator(".toc__item").count() === 0 && (await p.locator(".empty-note").innerText()).includes("catalogued"), "empty site: catalogue is empty and says so");
+  await p.goto(`${EMPTY}map/`, { waitUntil: "networkidle" });
+  check(await p.locator("canvas[data-graph]").count() === 0 && (await p.locator(".empty-note").count()) === 1, "empty site: map says there is nothing to map");
+  const feed = await (await p.request.get(`${EMPTY}feed.xml`)).text();
+  check(feed.includes("<feed") && !feed.includes("<entry>"), "empty site: feed is valid and has no entries");
+  await ctx.close();
+}
+
 await browser.close();
-server.close();
+servers.forEach((srv) => srv.close());
+temps.forEach((dir) => rmSync(dir, { recursive: true, force: true }));
 
 console.log(`PASS (${ok.length}):\n  ${ok.join("\n  ")}`);
 if (bad.length) console.log(`\nFAIL (${bad.length}):\n  ${bad.join("\n  ")}`);
