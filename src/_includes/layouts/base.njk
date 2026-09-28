@@ -48,8 +48,7 @@
   <div class="page">
     <header class="running-head">
       <nav class="running-head__nav" aria-label="Primary">
-        <a href="/"{% if home %} aria-current="page"{% endif %}>Contents</a>
-        <a href="/notes/"{% if page.url == '/notes/' %} aria-current="page"{% endif %}>Catalogue</a>
+        <a href="/"{% if home %} aria-current="page"{% endif %}>Home</a>
         <a href="/tags/"{% if page.url == '/tags/' %} aria-current="page"{% endif %}>Subjects</a>
         <a href="/map/"{% if page.url == '/map/' %} aria-current="page"{% endif %}>Map</a>
         <a href="/about/"{% if page.url == '/about/' %} aria-current="page"{% endif %}>About</a>
@@ -79,7 +78,7 @@
     <label class="search__label" for="search-input">Search the library</label>
     <input class="search__input" id="search-input" type="search" placeholder="A word, a subject, a shelf…" autocomplete="off" spellcheck="false" aria-controls="search-results" data-search-input>
     <ul class="search__results" id="search-results" role="listbox" data-search-results></ul>
-    <p class="search__empty" data-search-empty hidden>Nothing in the catalogue matches that.</p>
+    <p class="search__empty" data-search-empty hidden>Nothing in the library matches that.</p>
     <p class="search__hint">↑ ↓ to choose · return to open · esc to close</p>
   </div>
 </div>

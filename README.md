@@ -23,7 +23,7 @@ Tufte, Müller-Brockmann), are explained on the site's colophon page.
 
 ## Adding an entry
 
-The library starts empty: the home page, catalogue, subjects and map each
+The library starts empty: the home page, subjects and map each
 say so until the first entry arrives. Five sample entries, showing every
 feature (sidenotes, wiki links, asides, shelves, citations), are kept in
 `test/fixtures/notes/`, where the smoke test uses them. They are not
@@ -106,8 +106,7 @@ Does the flap of a butterfly's wings in Brazil set off a tornado in Texas?
 
 ## Finding things
 
-- **Contents** (the home page): every entry, grouped into parts by shelf.
-- **Catalogue** (`/notes/`): every entry by date, with a filter.
+- **Home**: every entry, grouped into parts by shelf.
 - **Subjects** (`/tags/`): an alphabetical subject index.
 - **Map** (`/map/`): the whole library as a graph; drag, scroll to zoom,
   select a node to open it.
@@ -252,7 +251,7 @@ src/
   assets/js/lorenz.js      ← the background
   assets/js/plate.js       ← Plate I, the attractor as an instrument
   assets/js/graph.js       ← the neighbourhood figures and the map
-  assets/js/library.js     ← search, sidenotes, theme, catalogue filter
+  assets/js/library.js     ← search, sidenotes, theme
   notes/*.md               ← the library
   index.njk  notes.njk  tags.njk  map.njk  about.md  colophon.md
   graph.njk  search.njk    ← graph.json and search.json

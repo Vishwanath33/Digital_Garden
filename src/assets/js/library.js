@@ -1,7 +1,7 @@
 /**
  * Progressive enhancement. Without JavaScript the library still reads:
- * footnotes stay footnotes, the theme follows the system, the catalogue is a
- * list, and the Explore tree is plain <details>.
+ * footnotes stay footnotes, the theme follows the system, and the Explore
+ * tree is plain <details>.
  */
 (() => {
   "use strict";
@@ -80,40 +80,6 @@
     });
 
     if (notes.size) article.classList.add("has-sidenotes");
-  }
-
-  // --- catalogue filter ---------------------------------------------------
-  const filter = document.querySelector("[data-filter]");
-  if (filter) {
-    const scope = document.querySelector(filter.dataset.filter) || document;
-    const rows = [...scope.querySelectorAll("[data-searchable]")];
-    const empty = document.querySelector("[data-filter-empty]");
-
-    const run = () => {
-      const q = filter.value.trim().toLowerCase();
-      let shown = 0;
-      for (const row of rows) {
-        const hit = !q || (row.dataset.searchable || "").includes(q);
-        row.hidden = !hit;
-        if (hit) shown++;
-      }
-      // Year headings with nothing left under them step aside too.
-      scope.querySelectorAll("[data-group]").forEach((group) => {
-        group.hidden = ![...group.querySelectorAll("[data-searchable]")].some((r) => !r.hidden);
-      });
-      if (empty) empty.hidden = shown !== 0;
-    };
-
-    filter.addEventListener("input", run);
-    filter.form?.addEventListener("submit", (e) => e.preventDefault());
-    filter.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") {
-        filter.value = "";
-        run();
-        filter.blur();
-      }
-    });
-    run();
   }
 
   // --- search -------------------------------------------------------------

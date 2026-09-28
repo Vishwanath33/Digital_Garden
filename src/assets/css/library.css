@@ -228,12 +228,8 @@ kbd {
 .entry__line,
 .toc__no,
 .toc__stage,
-.toc__date,
-.toc__meta,
 .section-head,
-.year,
 .fig-label,
-.filter__label,
 .foot {
   font-family: var(--mono);
   font-variant-numeric: tabular-nums;
@@ -845,7 +841,7 @@ code, pre, samp { font-family: var(--mono); font-size: 0.8em; font-variant-numer
   transform: translateY(-0.28em);
   opacity: 0.7;
 }
-.toc__stage, .toc__date {
+.toc__stage {
   flex: none;
   font-size: 0.7rem;
   letter-spacing: 0.06em;
@@ -862,55 +858,6 @@ code, pre, samp { font-family: var(--mono); font-size: 0.8em; font-variant-numer
   font-style: italic;
   color: var(--ink-2);
 }
-.toc__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.2rem 1.1rem;
-  margin: 0.3rem 0 0 3.25rem;
-  font-size: 0.68rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-.toc__meta a { color: var(--ink-3); text-decoration: none; }
-.toc__meta a::before { content: "#"; }
-.toc__meta a:hover { color: var(--accent); }
-
-.year {
-  margin: 2.5rem 0 0.4rem;
-  font-size: 0.72rem;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  color: var(--accent);
-}
-[data-group]:first-of-type .year { margin-top: 0; }
-
-.filter {
-  display: flex;
-  align-items: baseline;
-  gap: 1rem;
-  max-width: calc(var(--measure) + 6rem);
-  margin: -1rem 0 2.5rem;
-  border-bottom: 1px solid var(--ink);
-}
-.filter__label {
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-.filter__input {
-  flex: 1;
-  min-width: 0;
-  padding: 0.5rem 0;
-  font: italic 1.2rem var(--serif);
-  color: var(--ink);
-  background: transparent;
-  border: 0;
-  outline: none;
-}
-.filter__input::placeholder { color: var(--ink-3); }
-
 .empty-note { font-style: italic; color: var(--ink-3); }
 
 /* Subject index. */
@@ -1039,8 +986,8 @@ code, pre, samp { font-family: var(--mono); font-size: 0.8em; font-variant-numer
   .card { padding-left: 1.4rem; padding-top: 1.5rem; transform: none; }
   .card__call { position: static; margin-bottom: 0; }
   .card__call br { display: none; }
-  .toc__stage, .toc__date { display: none; }
-  .toc__dek, .toc__meta { margin-left: 3.25rem; }
+  .toc__stage { display: none; }
+  .toc__dek { margin-left: 3.25rem; }
 }
 
 @media print {

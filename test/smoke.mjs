@@ -234,20 +234,14 @@ const canvasPainted = (p, sel) =>
   await ctx.close();
 }
 
-// --- catalogue and subjects -------------------------------------------------------
+// --- navigation and subjects -----------------------------------------------------
 {
   const { ctx, p } = await page();
-  await p.goto(`${BASE}notes/`, { waitUntil: "networkidle" });
-  const total = await p.locator(".toc__item:visible").count();
-  await p.fill("#filter", "chaos");
-  await p.waitForTimeout(100);
-  const filtered = await p.locator(".toc__item:visible").count();
-  check(filtered === 2 && filtered < total, `catalogue filter narrows ${total} entries to ${filtered}`);
-  await p.fill("#filter", "zzzznothing");
-  await p.waitForTimeout(100);
-  check(await p.locator("[data-filter-empty]").isVisible(), "catalogue shows its empty state");
-  await p.locator("#filter").press("Escape");
-  check(await p.locator(".toc__item:visible").count() === total, "Escape clears the filter");
+  await p.goto(BASE, { waitUntil: "networkidle" });
+  const nav = (await p.locator(".running-head__nav a").allTextContents()).map((t) => t.trim());
+  check(nav[0] === "Home" && !nav.some((t) => /contents|catalogue/i.test(t)), `running head starts with Home, no Catalogue (${nav.join(", ")})`);
+  check(await p.locator('.running-head__nav a[href$="/"]').first().getAttribute("aria-current") === "page", "Home is marked current on the home page");
+  check((await p.request.get(`${BASE}notes/`)).status() === 404, "there is no catalogue page");
 
   await p.goto(`${BASE}tags/`, { waitUntil: "networkidle" });
   const heads = await p.locator(".subject__head").allInnerTexts();
@@ -304,7 +298,7 @@ const canvasPainted = (p, sel) =>
 // --- an empty library -------------------------------------
 {
   const { ctx, p, problems } = await page();
-  for (const path of ["", "notes/", "tags/", "map/", "about/", "colophon/", "404.html"]) {
+  for (const path of ["", "tags/", "map/", "about/", "colophon/", "404.html"]) {
     await p.goto(`${EMPTY}${path}`, { waitUntil: "networkidle" });
   }
   check(problems.length === 0, `empty site: every page loads cleanly${problems.length ? " — " + problems.join(", ") : ""}`);
@@ -321,8 +315,6 @@ const canvasPainted = (p, sel) =>
   check(await p.locator("[data-search-empty]").isVisible(), "empty site: search opens and finds nothing, cleanly");
   await p.keyboard.press("Escape");
 
-  await p.goto(`${EMPTY}notes/`, { waitUntil: "networkidle" });
-  check(await p.locator(".toc__item").count() === 0 && (await p.locator(".empty-note").innerText()).includes("catalogued"), "empty site: catalogue is empty and says so");
   await p.goto(`${EMPTY}map/`, { waitUntil: "networkidle" });
   check(await p.locator("canvas[data-graph]").count() === 0 && (await p.locator(".empty-note").count()) === 1, "empty site: map says there is nothing to map");
   const feed = await (await p.request.get(`${EMPTY}feed.xml`)).text();

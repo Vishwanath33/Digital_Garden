@@ -275,19 +275,6 @@ export default function (eleventyConfig) {
     return Math.max(1, Math.round(words / 220));
   });
 
-  // Group notes by year for the catalogue.
-  eleventyConfig.addFilter("byYear", (notes) => {
-    const groups = new Map();
-    for (const note of notes) {
-      const y = DateTime.fromJSDate(new Date(note.data.updated || note.date), { zone }).toFormat("yyyy");
-      if (!groups.has(y)) groups.set(y, []);
-      groups.get(y).push(note);
-    }
-    return [...groups.entries()]
-      .map(([y, items]) => ({ year: y, notes: items }))
-      .sort((a, b) => Number(b.year) - Number(a.year));
-  });
-
   /** The search index: one record per note, text capped to keep it small. */
   eleventyConfig.addFilter("searchIndex", (notes, accession = {}) =>
     JSON.stringify(
