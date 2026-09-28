@@ -1,0 +1,86 @@
+---
+layout: layouts/base.njk
+---
+{% set stage = site.stages[growth] or site.stages.seedling %}
+{% set incoming = collections.backlinks | lookup(page.url) %}
+
+<article>
+  <header>
+    <h1 class="note-title">{{ title }}</h1>
+    {% if summary %}<p class="note-summary">{{ summary }}</p>{% endif %}
+
+    <div class="meta">
+      <dl>
+        <dt>Stage</dt>
+        <dd>
+          <span class="stage stage--{{ stage.label }}" title="{{ stage.blurb }}">{{ stage.label }}</span>
+        </dd>
+      </dl>
+      <dl>
+        <dt>Planted</dt>
+        <dd><time datetime="{{ (planted or page.date) | shortDate }}">{{ (planted or page.date) | readableDate }}</time></dd>
+      </dl>
+      {% if updated %}
+      <dl>
+        <dt>Last tended</dt>
+        <dd><time datetime="{{ updated | shortDate }}">{{ updated | readableDate }}</time></dd>
+      </dl>
+      {% endif %}
+      {% if certainty %}
+      <dl>
+        <dt>Certainty</dt>
+        <dd class="certainty">{{ certainty }}</dd>
+      </dl>
+      {% endif %}
+      {% if importance %}
+      <dl>
+        <dt>Importance</dt>
+        <dd>{{ importance }}/10</dd>
+      </dl>
+      {% endif %}
+      <dl>
+        <dt>Length</dt>
+        <dd>{{ content | readingTime }} min</dd>
+      </dl>
+      {% if tags and tags.length %}
+      <dl style="grid-column: 1 / -1">
+        <dt>Tags</dt>
+        <dd>
+          <span class="tag-list">
+            {% for tag in tags %}<a class="tag" href="/tags/#{{ tag }}">{{ tag }}</a>{% endfor %}
+          </span>
+        </dd>
+      </dl>
+      {% endif %}
+    </div>
+  </header>
+
+  <nav class="toc" data-toc hidden aria-label="Contents">
+    <p class="toc-heading">Contents</p>
+  </nav>
+
+  <div class="prose prose--dropcap" data-sidenotes>
+    {{ content | safe }}
+  </div>
+
+  {% if incoming and incoming.length %}
+  <nav class="backlinks" aria-label="Notes that link here">
+    <p class="section-label">Linked from</p>
+    <ul>
+      {% for link in incoming %}
+      <li>
+        <a href="{{ link.url }}">{{ link.title }}</a>
+        {% if link.summary %}<p>{{ link.summary }}</p>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </nav>
+  {% endif %}
+
+  <nav class="backlinks" aria-label="Note actions">
+    <p class="section-label">This note</p>
+    <ul>
+      <li><a href="{{ site.repo }}/blob/{{ site.repoBranch }}/src/notes/{{ page.fileSlug }}.md">History &amp; source</a></li>
+    </ul>
+  </nav>
+</article>

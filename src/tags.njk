@@ -1,0 +1,30 @@
+---
+layout: layouts/base.njk
+title: Tags
+permalink: /tags/index.html
+---
+<h1 class="page-title">Tags</h1>
+<p class="lede">The garden's beds, by how crowded they are.</p>
+
+<div class="tag-cloud" style="margin-bottom:3rem">
+  {% for entry in collections.tagIndex %}
+  <a class="tag" href="#{{ entry.tag }}">{{ entry.tag }} <span>{{ entry.count }}</span></a>
+  {% endfor %}
+</div>
+
+{% for entry in collections.tagIndex %}
+<section id="{{ entry.tag }}" style="margin-bottom:2.5rem">
+  <h2 class="group-heading">#{{ entry.tag }} — {{ entry.count }}</h2>
+  <ul class="entry-list">
+    {% for note in entry.notes %}
+    <li class="entry">
+      <div class="entry__head">
+        <h3 class="entry__title"><a href="{{ note.url }}">{{ note.data.title }}</a></h3>
+        <span class="entry__date">{{ (note.data.updated or note.date) | shortDate }}</span>
+      </div>
+      {% if note.data.summary %}<p class="entry__summary">{{ note.data.summary }}</p>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endfor %}

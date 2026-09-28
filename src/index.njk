@@ -1,0 +1,47 @@
+---
+layout: layouts/base.njk
+home: true
+permalink: /index.html
+---
+<section class="hero">
+  <h1 class="hero__title">Notes that grow in <em>public</em>.</h1>
+  <p class="lede">
+    This is a garden, not a blog. Nothing here is finished; some of it is wrong.
+    Entries are planted small, revised when I learn something, and marked with
+    how much I currently trust them. The attractor turning behind the text is
+    the reason for the name — two nearby states, one small perturbation, and
+    the trajectories never meet again. Ideas behave about the same way.
+  </p>
+</section>
+
+<section>
+  <p class="section-label">Recently tended</p>
+  <ul class="entry-list">
+    {% for note in collections.notes | head(8) %}
+    <li class="entry">
+      <div class="entry__head">
+        <h2 class="entry__title"><a href="{{ note.url }}">{{ note.data.title }}</a></h2>
+        <span class="entry__date">{{ (note.data.updated or note.date) | shortDate }}</span>
+      </div>
+      {% if note.data.summary %}<p class="entry__summary">{{ note.data.summary }}</p>{% endif %}
+      <div class="entry__meta">
+        {% set stage = site.stages[note.data.growth] or site.stages.seedling %}
+        <span class="stage stage--{{ stage.label }}">{{ stage.label }}</span>
+        {% for tag in note.data.tags | head(3) %}<span>#{{ tag }}</span>{% endfor %}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  <p class="filter-hint" style="margin-top:1rem">
+    <a href="/notes/">All {{ collections.notes.length }} notes →</a>
+  </p>
+</section>
+
+<section style="margin-top:3.5rem">
+  <p class="section-label">What grows here</p>
+  <div class="tag-cloud">
+    {% for entry in collections.tagIndex %}
+    <a class="tag" href="/tags/#{{ entry.tag }}">{{ entry.tag }} <span>{{ entry.count }}</span></a>
+    {% endfor %}
+  </div>
+</section>

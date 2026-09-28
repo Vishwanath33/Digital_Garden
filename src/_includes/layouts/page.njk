@@ -1,0 +1,10 @@
+---
+layout: layouts/base.njk
+---
+<article>
+  <h1 class="page-title">{{ title }}</h1>
+  {% if summary %}<p class="lede">{{ summary }}</p>{% endif %}
+  <div class="prose" data-sidenotes>
+    {{ content | safe }}
+  </div>
+</article>

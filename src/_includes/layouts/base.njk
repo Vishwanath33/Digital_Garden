@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>{% if title and not home %}{{ title }} · {{ site.title }}{% else %}{{ site.title }} — {{ site.tagline }}{% endif %}</title>
+<meta name="description" content="{{ summary or description or site.description }}">
+<meta name="author" content="{{ site.author.name }}">
+
+<link rel="canonical" href="{{ page.url | fullUrl }}">
+<link rel="alternate" type="application/atom+xml" title="{{ site.title }}" href="{{ '/feed.xml' | fullUrl }}">
+
+<meta property="og:type" content="{% if layout == 'layouts/note.njk' %}article{% else %}website{% endif %}">
+<meta property="og:title" content="{{ title or site.title }}">
+<meta property="og:description" content="{{ summary or description or site.description }}">
+<meta property="og:url" content="{{ page.url | fullUrl }}">
+<meta property="og:site_name" content="{{ site.title }}">
+<meta name="twitter:card" content="summary">
+
+{# A tiny inline SVG favicon: the attractor's two lobes. #}
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 4C9 6 4 12 6 18c2 5 8 5 10 1s8-3 10 2c2 5-4 9-10 7' fill='none' stroke='%239a5b2d' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
+
+<link rel="stylesheet" href="/assets/css/garden.css">
+
+<script>
+  /* Set the theme before first paint so nothing flashes. */
+  (function () {
+    try {
+      var t = localStorage.getItem("garden-theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<canvas id="lorenz" aria-hidden="true"></canvas>
+
+<header class="masthead shell">
+  <a class="masthead__name" href="/">{{ site.title }}</a>
+  <nav class="masthead__nav" aria-label="Primary">
+    <a href="/notes/"{% if '/notes/' in page.url %} aria-current="page"{% endif %}>notes</a>
+    <a href="/tags/"{% if '/tags/' in page.url %} aria-current="page"{% endif %}>tags</a>
+    <a href="/about/"{% if page.url == '/about/' %} aria-current="page"{% endif %}>about</a>
+    <a href="/colophon/"{% if page.url == '/colophon/' %} aria-current="page"{% endif %}>colophon</a>
+    <a href="/feed.xml">feed</a>
+  </nav>
+  <div class="controls">
+    <button class="control" type="button" data-theme-toggle aria-label="Theme">◐</button>
+    <button class="control" type="button" data-motion-toggle aria-label="Pause the attractor">❉</button>
+  </div>
+</header>
+
+<main id="main" class="shell">
+  {{ content | safe }}
+</main>
+
+<footer class="colophon shell">
+  <span>{{ site.author.name }}</span>
+  <span>·</span>
+  <span>tended since 2026</span>
+  <span class="colophon__spacer"></span>
+  <a href="{{ site.repo }}">source</a>
+  <a href="/feed.xml">atom</a>
+  <a href="/colophon/">colophon</a>
+</footer>
+
+<script src="/assets/js/lorenz.js" defer></script>
+<script src="/assets/js/garden.js" defer></script>
+</body>
+</html>

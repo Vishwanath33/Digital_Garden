@@ -1,0 +1,49 @@
+---
+layout: layouts/base.njk
+title: All notes
+permalink: /notes/index.html
+---
+<h1 class="page-title">The garden</h1>
+<p class="lede">
+  Every note, newest tending first. Growth stage is a claim about maturity,
+  not length: a <span class="stage stage--seedling">seedling</span> may be
+  long and wrong, an <span class="stage stage--evergreen">evergreen</span>
+  short and load-bearing.
+</p>
+
+<div class="filter-row">
+  <form role="search" onsubmit="return false">
+    <label class="sr-only" for="filter">Filter notes</label>
+    <input class="filter-input" id="filter" type="search" autocomplete="off"
+           placeholder="Filter by title, summary, or tag…"
+           data-filter="#note-index">
+  </form>
+  <p class="filter-hint">Press <kbd>/</kbd> to search, <kbd>Esc</kbd> to clear.</p>
+</div>
+
+<div id="note-index">
+  {% for group in collections.notes | byYear %}
+  <section data-group>
+    <h2 class="group-heading">{{ group.year }}</h2>
+    <ul class="entry-list">
+      {% for note in group.notes %}
+      {% set stage = site.stages[note.data.growth] or site.stages.seedling %}
+      <li class="entry" data-searchable="{{ (note.data.title ~ ' ' ~ (note.data.summary or '') ~ ' ' ~ (note.data.tags | join(' '))) | lower }}">
+        <div class="entry__head">
+          <h3 class="entry__title"><a href="{{ note.url }}">{{ note.data.title }}</a></h3>
+          <span class="entry__date">{{ (note.data.updated or note.date) | shortDate }}</span>
+        </div>
+        {% if note.data.summary %}<p class="entry__summary">{{ note.data.summary }}</p>{% endif %}
+        <div class="entry__meta">
+          <span class="stage stage--{{ stage.label }}">{{ stage.label }}</span>
+          {% if note.data.certainty %}<span>certainty: {{ note.data.certainty }}</span>{% endif %}
+          {% for tag in note.data.tags %}<span>#{{ tag }}</span>{% endfor %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endfor %}
+</div>
+
+<p class="empty-note" data-filter-empty hidden>Nothing here matches that. Try a broader word.</p>

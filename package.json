@@ -1,0 +1,24 @@
+{
+  "name": "digital-garden",
+  "version": "1.0.0",
+  "description": "A digital garden \u2014 notes that grow in public.",
+  "type": "module",
+  "scripts": {
+    "dev": "eleventy --serve --quiet",
+    "build": "eleventy",
+    "clean": "rm -rf _site",
+    "test": "npm run build && node test/smoke.mjs"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@11ty/eleventy": "^3.1.6",
+    "@11ty/eleventy-plugin-rss": "^2.0.4",
+    "luxon": "^3.7.2",
+    "markdown-it-anchor": "^9.2.1",
+    "markdown-it-attrs": "^4.5.0",
+    "markdown-it-footnote": "^4.0.0"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.50.0"
+  }
+}
