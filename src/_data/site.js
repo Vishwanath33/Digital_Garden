@@ -15,21 +15,19 @@ export default {
   // Leave it null to serve from the free host address below.
   domain: null,
 
-  // The free address the host gives you. Cloudflare Pages uses
-  // https://<project-name>.pages.dev — paste the real one here after the
-  // first deploy. Only absolute URLs (canonical, feed, sitemap) use it;
-  // internal links work regardless.
-  hostUrl: "https://lorenz-garden.pages.dev",
+  // The free address GitHub Pages serves this repository from. A project
+  // page lives under /<repo>/; the path prefix is derived from this.
+  hostUrl: "https://vishwanath33.github.io/Digital_Garden",
 
   // Repository, for "history & source" links.
   repo: "https://github.com/Vishwanath33/Digital_Garden",
   // HEAD resolves to whatever the default branch is called.
   repoBranch: "HEAD",
 
-  // Readers cannot open a private repository, so while this is false the
-  // source, history and issue links are left out rather than left broken.
-  // Set it to true if you ever make the repository public.
-  sourcePublic: false,
+  // The repository is public, so each note links to its history and source.
+  // Set to false if it ever goes private: the links are then left out
+  // rather than left broken.
+  sourcePublic: true,
 
   get url() {
     return (this.domain ? `https://${this.domain}` : this.hostUrl).replace(/\/$/, "");

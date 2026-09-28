@@ -2,7 +2,7 @@
 
 A digital garden — notes organised by subject, revised in place, each labelled
 with how mature it is and how much its author currently believes it. Built
-with [Eleventy](https://www.11ty.dev/), hosted free on Cloudflare Pages, with a live
+with [Eleventy](https://www.11ty.dev/), deployed to GitHub Pages, with a live
 Lorenz attractor integrated behind every page.
 
 ```
@@ -128,75 +128,74 @@ column is the `mask-image` on `#lorenz` in the stylesheet.
 
 ---
 
-## Deploying — free, from a private repository
+## Deploying
 
-GitHub Pages is free only for public repositories, so this site is hosted on
-**Cloudflare Pages**, which builds from private repositories at no cost,
-includes HTTPS, and handles custom domains. Cloudflare runs the build itself,
-so there is no deploy workflow in this repository.
+A push triggers `.github/workflows/deploy.yml`, which builds the site and
+publishes it to GitHub Pages at
+`https://vishwanath33.github.io/Digital_Garden`. GitHub Pages is free for
+public repositories.
 
-One-time setup (about five minutes):
+One-time setup: **Settings → Pages → Build and deployment → Source: GitHub
+Actions.** That setting can't be made from the workflow, because its token
+isn't allowed to enable Pages. Until it's set, runs fail at `configure-pages`.
+After setting it, re-run the latest workflow run or push again.
 
-1. Create a free account at [dash.cloudflare.com](https://dash.cloudflare.com/sign-up).
-2. **Workers & Pages → Create → Pages → Connect to Git.** Authorise GitHub and
-   grant access to just this repository — private repositories are fine.
-3. Configure the build:
-
-   | Setting | Value |
-   | --- | --- |
-   | Project name | `lorenz-garden` (becomes `lorenz-garden.pages.dev`) |
-   | Production branch | `claude/gifted-knuth-6inz5y` — or `main` once renamed |
-   | Framework preset | None |
-   | Build command | `npm run build` |
-   | Build output directory | `_site` |
-
-   Node 22 is pinned by `.node-version`. If a build ever picks an older Node,
-   add an environment variable `NODE_VERSION` = `22`.
-
-4. **Save and Deploy.** From then on every push rebuilds and publishes, and
-   Cloudflare shows the build status on each commit in GitHub.
-
-5. If Cloudflare gave you a different address (e.g. `lorenz-garden-4xk.pages.dev`
-   because the name was taken), paste it into `hostUrl` in
-   `src/_data/site.js`. Internal links work either way; this only fixes the
-   absolute URLs in the feed, sitemap and link previews.
-
-> Cloudflare's dashboard labels move around. If a menu name above doesn't
-> match, the thing you are looking for is "create a Pages project from a Git
-> repository".
+> The repository was created empty, so the first push became the default
+> branch rather than `main`. The workflow watches both; rename the branch to
+> `main` in **Settings → Branches** and then drop the extra entry from the
+> workflow's `branches:` list.
 
 ### A custom domain
 
-Buying through **Cloudflare Registrar** (dashboard → Domain Registration) is
-simplest because the DNS is then set up for you, and it sells at cost: a
-`.com` is about $10/year. Then:
+Buy the name from any registrar. [Cloudflare Registrar](https://www.cloudflare.com/products/registrar/)
+sells at cost (a `.com` is about $10/year); Porkbun and Namecheap are also
+good. Then:
 
-1. In the Pages project: **Custom domains → Set up a custom domain**, and enter
-   it. On a Cloudflare-registered domain the records are created
-   automatically; HTTPS follows within minutes.
-2. Set it in `src/_data/site.js` and push:
+1. Set it in `src/_data/site.js` and push:
 
    ```js
    domain: "your-domain.example",
    ```
 
-   Canonical URLs, the sitemap and the feed all follow that one value.
+   The build writes `_site/CNAME` from that value, and drops the
+   `/Digital_Garden/` path prefix. Canonical URLs, the sitemap and the feed
+   all follow the same setting.
 
-A domain bought elsewhere (Porkbun, Namecheap…) works too: Cloudflare shows
-the CNAME record to add at your registrar when you enter the domain.
+2. At your registrar, point the domain at GitHub Pages. For an **apex**
+   domain (`your-domain.example`):
 
-### The source links
+   ```
+   A     @   185.199.108.153
+   A     @   185.199.109.153
+   A     @   185.199.110.153
+   A     @   185.199.111.153
+   AAAA  @   2606:50c0:8000::153
+   AAAA  @   2606:50c0:8001::153
+   AAAA  @   2606:50c0:8002::153
+   AAAA  @   2606:50c0:8003::153
+   ```
 
-While the repository is private, readers can't open it, so the
-*History & source* links, the footer's *source* link and the GitHub-issue
-route on the about page are left out rather than left broken
-(`sourcePublic: false` in `site.js`). If you make the repository public, set
-it to `true` and they come back.
+   For a **subdomain** (`garden.your-domain.example`), one record instead:
 
-Making it public also makes free **GitHub Pages** an option again. In that
-case set `hostUrl` to `https://vishwanath33.github.io/Digital_Garden` (the
-path prefix follows automatically) and restore the Pages workflow from this
-repository's history (`git show 4d0d007:.github/workflows/deploy.yml`).
+   ```
+   CNAME  garden   vishwanath33.github.io.
+   ```
+
+   > These addresses have been stable for years, but GitHub can change them.
+   > Check them against the values shown in **Settings → Pages** once you've
+   > entered the domain there.
+
+3. **Settings → Pages → Custom domain**: enter the domain, save, and tick
+   **Enforce HTTPS** once the certificate is issued (minutes, occasionally up
+   to a day).
+
+### If the repository goes private again
+
+GitHub Pages then needs a paid plan. Set `sourcePublic: false` in `site.js`
+so the history and source links are left out rather than left broken.
+Cloudflare Pages is a free host that builds from private repositories:
+connect the repository, set the build command to `npm run build` and the
+output directory to `_site`, and put its `*.pages.dev` address in `hostUrl`.
 
 ---
 
