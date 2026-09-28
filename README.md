@@ -134,7 +134,11 @@ A push triggers `.github/workflows/deploy.yml`, which builds and publishes to
 GitHub Pages. One-time setup:
 
 1. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
-2. Push. The run publishes to `https://vishwanath33.github.io/Digital_Garden`.
+   This one is required and cannot be automated — the workflow's token is not
+   allowed to enable Pages, and the run fails at `configure-pages` until the
+   setting is made.
+2. Re-run the workflow (**Actions → Build and deploy → Run workflow**, or just
+   push again). It publishes to `https://vishwanath33.github.io/Digital_Garden`.
 
 > The repository was created empty, so the first push became the default
 > branch rather than `main`. The workflow currently watches both that branch
