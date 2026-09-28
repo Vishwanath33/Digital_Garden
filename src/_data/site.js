@@ -34,8 +34,8 @@ export default {
   // repository's real name, so renaming it needs no edit here: a repository
   // named <user>.github.io is served from the root of that address, any
   // other from /<repo>/ beneath it. The values below are for local builds.
-  hostUrl: pagesUrl() || "https://vishwanath33.github.io/Digital_Garden",
-  repo: repoUrl() || "https://github.com/Vishwanath33/Digital_Garden",
+  hostUrl: pagesUrl() || "https://vishwanath33.github.io/vishwanath",
+  repo: repoUrl() || "https://github.com/Vishwanath33/vishwanath",
   // HEAD resolves to whatever the default branch is called.
   repoBranch: "HEAD",
 

@@ -147,7 +147,7 @@ and `RATE` (the slow rocking of the view).
 
 A push triggers `.github/workflows/deploy.yml`, which builds the site and
 publishes it to GitHub Pages at
-`https://vishwanath33.github.io/Digital_Garden`. GitHub Pages is free for
+`https://vishwanath33.github.io/vishwanath`. GitHub Pages is free for
 public repositories.
 
 One-time setup: **Settings → Pages → Build and deployment → Source: GitHub
@@ -183,7 +183,7 @@ good. Then:
    ```
 
    The build writes `_site/CNAME` from that value, and drops the
-   `/Digital_Garden/` path prefix. Canonical URLs, the sitemap and the feed
+   `/vishwanath/` path prefix. Canonical URLs, the sitemap and the feed
    all follow the same setting.
 
 2. At your registrar, point the domain at GitHub Pages. For an **apex**
