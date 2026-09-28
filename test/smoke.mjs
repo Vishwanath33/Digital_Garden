@@ -137,6 +137,8 @@ const canvasPainted = (p, sel) =>
   check(await p.evaluate(() => window.__lorenz.level) === 0, "…but not for ever");
   await p.evaluate(() => localStorage.removeItem("library-motion-level"));
   check((await p.locator(".foot").innerText()).toLowerCase().indexOf("lorenz library") === -1, "footer does not repeat the library's name");
+  check(await p.locator('a[href$="feed.xml"]').count() === 0, "no visible link to the raw feed file");
+  check(await p.locator('head link[rel="alternate"][type="application/atom+xml"]').count() === 1, "…but readers can still find the feed");
 
   // Theme: two states, named for the one it switches to, persisted.
   const label = await p.locator("[data-theme-toggle]").innerText();
