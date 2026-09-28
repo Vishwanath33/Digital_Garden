@@ -290,11 +290,6 @@ kbd {
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
-.running-head__title {
-  color: var(--ink);
-  text-decoration: none;
-  font-weight: 500;
-}
 .running-head__nav {
   display: flex;
   flex-wrap: wrap;
@@ -314,8 +309,7 @@ kbd {
   text-transform: inherit;
 }
 .running-head__nav a:hover,
-.running-head__button:hover,
-.running-head__title:hover { color: var(--accent); }
+.running-head__button:hover { color: var(--accent); }
 .running-head__nav a[aria-current="page"] { color: var(--ink); }
 .running-head__button kbd { font-size: 0.95em; margin-left: 0.2em; text-transform: none; }
 
@@ -606,6 +600,34 @@ code, pre, samp { font-family: var(--mono); font-size: 0.8em; font-variant-numer
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--accent);
+}
+
+/* Displayed equations, in MathML: typeset by the browser, no library. */
+.prose > .equations {
+  margin: 1.6rem 0 1.8rem;
+  padding: 1.1rem 0 0.9rem;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.equations math {
+  font-family: var(--serif);
+  font-size: 1.45rem;
+  color: var(--ink);
+}
+/* Variables in the text face's own italic (mathvariant="normal" stops the
+   browser substituting Unicode maths italics, which Newsreader lacks), and
+   full-size display fractions rather than the compact in-table style. */
+.equations mi { font-style: italic; }
+.equations mtd { math-style: normal; padding: 0.4rem 0.2rem; }
+.equations mo { padding: 0 0.12em; }
+.equations mtd:first-child { text-align: right; }
+.equations mtd:last-child { text-align: left; }
+.equations figcaption {
+  margin-top: 0.6rem;
+  text-align: center;
+  font: 0.72rem var(--mono);
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
 }
 
 /* --- sidenotes: in the outer margin when the text column has room ---------- */
