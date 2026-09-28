@@ -22,7 +22,8 @@ export default {
 
   // Repository, for "edit this page" and colophon links.
   repo: "https://github.com/Vishwanath33/Digital_Garden",
-  repoBranch: "main",
+  // HEAD resolves to whatever the default branch is called.
+  repoBranch: "HEAD",
 
   get origin() {
     return this.domain ? `https://${this.domain}` : `https://${this.githubUser}.github.io`;

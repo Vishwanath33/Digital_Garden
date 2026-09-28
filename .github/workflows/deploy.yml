@@ -2,7 +2,9 @@ name: Build and deploy
 
 on:
   push:
-    branches: [main]
+    # The repository was created empty, so the first push became the default
+    # branch. Both are listed here; drop the second once you settle on main.
+    branches: [main, claude/gifted-knuth-6inz5y]
   workflow_dispatch:
 
 permissions:

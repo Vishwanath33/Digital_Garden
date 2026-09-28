@@ -130,12 +130,16 @@ column is the `mask-image` on `#lorenz` in the stylesheet.
 
 ## Deploying
 
-A push to `main` triggers `.github/workflows/deploy.yml`, which builds and
-publishes to GitHub Pages. One-time setup:
+A push triggers `.github/workflows/deploy.yml`, which builds and publishes to
+GitHub Pages. One-time setup:
 
 1. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
-2. Push. The first run publishes to
-   `https://vishwanath33.github.io/Digital_Garden`.
+2. Push. The run publishes to `https://vishwanath33.github.io/Digital_Garden`.
+
+> The repository was created empty, so the first push became the default
+> branch rather than `main`. The workflow currently watches both that branch
+> and `main`; rename the branch to `main` in **Settings → Branches** (or push
+> a `main`) and then drop the extra entry from the workflow's `branches:` list.
 
 ### A custom domain
 
